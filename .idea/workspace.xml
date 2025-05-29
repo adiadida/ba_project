@@ -4,7 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8e5618ad-872a-4c7e-8c33-580bf693e442" name="Changes" comment="initial commit" />
+    <list default="true" id="8e5618ad-872a-4c7e-8c33-580bf693e442" name="Changes" comment="initial commit">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmaa/src/app/groupdecision/inputcmaa/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/cmaa/src/app/groupdecision/inputcmaa/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmaa/src/app/groupdecision/inputswa/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/cmaa/src/app/groupdecision/inputswa/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmaa/src/app/groupdecision/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/cmaa/src/app/groupdecision/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmaa/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/cmaa/src/app/page.tsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -100,7 +106,23 @@
       <option name="project" value="LOCAL" />
       <updated>1748530430490</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="install mui">
+      <option name="closed" value="true" />
+      <created>1748530477621</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1748530477621</updated>
+    </task>
+    <task id="LOCAL-00005" summary="initial commit">
+      <option name="closed" value="true" />
+      <created>1748530521578</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1748530521578</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -118,6 +140,7 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <MESSAGE value="install mui" />
     <MESSAGE value="initial commit" />
     <option name="LAST_COMMIT_MESSAGE" value="initial commit" />
   </component>

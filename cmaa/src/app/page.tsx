@@ -44,6 +44,13 @@ export default function Home() {
           >
             Read our docs
           </a>
+
+          <a
+            href={'/groupdecision'}
+            className={styles.secondary}
+          >
+            app
+          </a>
         </div>
       </main>
       <footer className={styles.footer}>

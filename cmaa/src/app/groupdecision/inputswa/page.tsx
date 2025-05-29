@@ -1,5 +1,5 @@
 import {GenericHeader} from "@/components/GenericHeader";
 
-export default function SWA()  {
+export default function SWAPage()  {
     return (<GenericHeader title={'Nutzwertanalyse'}/>)
 }

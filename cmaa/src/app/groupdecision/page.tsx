@@ -1,5 +1,6 @@
+'use Client'
 import {GenericHeader} from "@/components/GenericHeader";
 
-export default function Home()  {
+export default function DecisionPage()  {
     return (<GenericHeader title={'Gruppenentscheidung'}/>)
 }
