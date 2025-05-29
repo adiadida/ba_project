@@ -1,4 +1,3 @@
-import Box from "@mui/material/Box";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import {Grid} from "@mui/material";
@@ -9,7 +8,7 @@ import React from "react";
  * **/
 export const GenericHeader = ({title}: GenericHeaderProps) => {
     return (
-            <Box sx={{flexGrow: 0}}>
+        <Grid size={{ xs: 12, md: 12, lg: 12 }}>
                 <AppBar position="static">
                     <Toolbar>
                         <Grid
@@ -19,12 +18,12 @@ export const GenericHeader = ({title}: GenericHeaderProps) => {
                                 justifyContent={"space-between"}
                                 direction={"row"}
                         >
-                            title={title}
+                            {title}
 
                         </Grid>
                     </Toolbar>
                 </AppBar>
-            </Box>
+        </Grid>
     );
 };
 
