@@ -4,16 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8e5618ad-872a-4c7e-8c33-580bf693e442" name="Changes" comment="initial commit">
-      <change afterPath="$PROJECT_DIR$/cmaavis/src/app/groupdecision/inputcmaa/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cmaavis/src/app/groupdecision/inputswa/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cmaavis/src/app/groupdecision/page.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cmaavis/src/components/GenericHeader.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmaavis/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/cmaavis/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmaavis/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/cmaavis/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmaavis/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/cmaavis/src/App.tsx" afterDir="false" />
-    </list>
+    <list default="true" id="8e5618ad-872a-4c7e-8c33-580bf693e442" name="Changes" comment="initial commit" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -33,6 +24,9 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
@@ -55,12 +49,14 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "ts.external.directory.path": "/home/adriana/Dokumente/sem8/CMAAProject/cmaavis/node_modules/typescript/lib",
+    "ts.external.directory.path": "/home/adriana/Dokumente/sem8/CMAAProject/cmaa/node_modules/typescript/lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/cmaa/src" />
+      <recent name="$PROJECT_DIR$/cmaa/src/app" />
       <recent name="$PROJECT_DIR$/cmaavis/src/app" />
     </key>
   </component>
@@ -88,7 +84,23 @@
       <option name="project" value="LOCAL" />
       <updated>1748372636960</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="initial commit">
+      <option name="closed" value="true" />
+      <created>1748530374031</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1748530374031</updated>
+    </task>
+    <task id="LOCAL-00003" summary="initial commit">
+      <option name="closed" value="true" />
+      <created>1748530430490</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1748530430490</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
