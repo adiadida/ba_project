@@ -4,18 +4,39 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8e5618ad-872a-4c7e-8c33-580bf693e442" name="Changes" comment="initial commit" />
+    <list default="true" id="8e5618ad-872a-4c7e-8c33-580bf693e442" name="Changes" comment="initial commit">
+      <change afterPath="$PROJECT_DIR$/cmaavis/src/app/groupdecision/inputcmaa/page.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmaavis/src/app/groupdecision/inputswa/page.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmaavis/src/app/groupdecision/page.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cmaavis/src/components/GenericHeader.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmaavis/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/cmaavis/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmaavis/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/cmaavis/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmaavis/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/cmaavis/src/App.tsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="TypeScript JSX File" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 2
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
   <component name="ProjectId" id="2xgrfCSDUZ36Gn9I3LaBXZj75Tv" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -27,7 +48,8 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "working",
+    "last_opened_file_path": "/home/adriana/react-mui-demo",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -37,6 +59,11 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/cmaavis/src/app" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
