@@ -1,25 +1,35 @@
-import {Button, Card, CardActions, CardContent, Typography} from "@mui/material";
+import {GenericInputCard, InputProps} from "@/components/GenericInputCard";
 import {SWAInputs} from "@/components/SWAInputs";
+import {router} from "next/client";
 
-export const SWAInputCard = () => {
+export const SWAInputCard = ({inputs, onData}: SWAInputCardProps) => {
 
-    const handleNext = () => {
-    // Initialize table with default size, e.g., 3x3
+    const handleDataChange = (newInputs: InputProps) => {
+        onData(newInputs);
+    };
 
-  };
+    const handleNext = (inputs: InputProps) => {
+        // Initialize table with size from inputs
+        // For example:
+        // setTableSize(inputs.size);
+    };
+
+    const handleButtonClick = () => {
+        handleNext(inputs); // pass the inputs object directly
+        // then navigate
+        router.push("/groupdecision/inputswa")
+    };
 
     return (
-        <Card variant="outlined">
-            <CardContent>
-                <Typography variant="h5" component="div">
-                    Nutzwertanalyse (SWA)
-                </Typography>
-                <SWAInputs/>
-            </CardContent>
-            <CardActions>
-                <Button variant="outlined">generieren</Button>
-            </CardActions>
-        </Card>
+        <GenericInputCard cardTitle={'Nutzwertanalyse (SWA)'}
+                          inputChild={<SWAInputs inputs={inputs} onData={handleDataChange}/>}
+                          buttonTitle={'generieren'} onClick={handleButtonClick} inputs={inputs}
+                          onChange={handleDataChange}/>
     )
 
+}
+
+export type SWAInputCardProps = {
+    inputs: InputProps;
+    onData: (inputs: InputProps) => void;
 }

@@ -1,15 +1,27 @@
 'use client'
 
 import {Grid, TextField, Typography} from "@mui/material";
-import {useState} from "react";
+import {ChangeEvent} from "react";
+import {InputProps} from "@/components/GenericInputCard";
 
-export const GenericInput = ({typoText, fieldName, fieldLabelText, isRequired,isDisabled}: GenericInputProps) => {
+export const GenericInput = ({
+                                 typoText,
+                                 fieldName,
+                                 fieldLabelText,
+                                 isRequired,
+                                 isDisabled,
+                                 inputs,
+                                 onChange
+                             }: GenericInputProps) => {
 
-    const [inputs, setInputs] = useState({ criteria: '', alternatives: '', decisionMakers: '' });
+    const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = event.target;
+            // Call parent's onChange with updated inputs
+        if (onChange) {
+            onChange({ [name]: value });
+        }
+    };
 
-    const handleInputChange = (e) => {
-    setInputs({ ...inputs, [e.target.name]: e.target.value });
-  };
 
     return (
         <Grid container
@@ -18,20 +30,21 @@ export const GenericInput = ({typoText, fieldName, fieldLabelText, isRequired,is
               sx={{
                   justifyContent: "space-between",
                   alignItems: "center",
-                     }}
+              }}
         >
-            <Grid item>
+            <Grid>
                 <Typography variant="caption" component="div">{typoText}</Typography>
             </Grid>
-            <Grid item>
+            <Grid>
                 <TextField
                     required={isRequired}
                     disabled={isDisabled}
-                    name = {fieldName}
+                    name={fieldName}
                     label={fieldLabelText}
                     variant="outlined"
                     margin="normal"
-                    onChange={handleInputChange}
+                    value={inputs ? String(inputs[fieldName as keyof typeof inputs] ?? '') : ''}
+                    onChange={handleChange}
                 />
             </Grid>
 
@@ -39,11 +52,13 @@ export const GenericInput = ({typoText, fieldName, fieldLabelText, isRequired,is
     )
 }
 
-type GenericInputProps = {
+export type GenericInputProps = {
     typoText: string;
     fieldName: string;
     fieldLabelText: string;
     isRequired: boolean;
     isDisabled: boolean;
+    inputs?: InputProps;
+    onChange?: (inputs: { [p: string]: string }) => void;
 }
 

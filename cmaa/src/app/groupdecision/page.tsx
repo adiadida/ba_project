@@ -1,12 +1,24 @@
 'use client'
 import {GenericHeader} from "@/components/GenericHeader";
 import Grid from "@mui/material/Grid";
-import {Card} from "@mui/material";
 import {SWAInputCard} from "@/components/SWAInputCard";
+import {useState} from "react";
+import {InputProps} from "@/components/GenericInputCard";
+import {Box} from "@mui/system";
 
 export default function DecisionPage() {
-    return (
 
+    const [inputs, setInputs] = useState<InputProps>({
+        criteria: undefined,
+        alternatives: undefined,
+        decisionMakers: undefined,
+    });
+
+    const handleInputChange = (updatedInputs: Partial<InputProps>) => {
+        setInputs((prev: InputProps) => ({ ...prev, ...updatedInputs }));
+    };
+
+    return (
         <Grid container spacing={2}>
             <GenericHeader title={'Gruppenentscheidung'}/>
             <Grid container spacing={4} size={{xs: 11, md: 7, lg: 8}}
@@ -15,12 +27,12 @@ export default function DecisionPage() {
                       alignItems: "center",
                   }}
             >
-                <Grid item xs={11}>
-                    <SWAInputCard/>
+                <Grid size={{xs: 11, md: 7, lg: 8}}>
+                    <SWAInputCard inputs={inputs} onData={handleInputChange}/>
                 </Grid>
 
-                <Grid item xs={12}>
-                    <Card></Card>
+                <Grid size={{xs: 11, md: 7, lg: 8}}>
+                    <Box display="flex" justifyContent="flex-end"></Box>
                 </Grid>
             </Grid>
         </Grid>
