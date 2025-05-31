@@ -4,12 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8e5618ad-872a-4c7e-8c33-580bf693e442" name="Changes" comment="initial commit">
+    <list default="true" id="8e5618ad-872a-4c7e-8c33-580bf693e442" name="Changes" comment="define Props for data flow for SWA">
+      <change afterPath="$PROJECT_DIR$/cmaa/src/components/CMAAInputCard.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmaa/src/app/groupdecision/inputcmaa/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/cmaa/src/app/groupdecision/inputcmaa/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmaa/src/app/groupdecision/inputswa/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/cmaa/src/app/groupdecision/inputswa/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmaa/src/app/groupdecision/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/cmaa/src/app/groupdecision/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmaa/src/app/favicon.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmaa/src/app/globals.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmaa/src/app/page.module.css" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cmaa/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/cmaa/src/app/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmaa/src/components/SWAInputCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/cmaa/src/components/SWAInputCard.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,7 +34,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
@@ -122,7 +124,39 @@
       <option name="project" value="LOCAL" />
       <updated>1748530521578</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="install @emotion/react">
+      <option name="closed" value="true" />
+      <created>1748531541639</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1748531541639</updated>
+    </task>
+    <task id="LOCAL-00007" summary="install @emotion/styled">
+      <option name="closed" value="true" />
+      <created>1748531687672</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1748531687672</updated>
+    </task>
+    <task id="LOCAL-00008" summary="implementing GUI for SWA">
+      <option name="closed" value="true" />
+      <created>1748542275303</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1748542275303</updated>
+    </task>
+    <task id="LOCAL-00009" summary="define Props for data flow for SWA">
+      <option name="closed" value="true" />
+      <created>1748695487062</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1748695487062</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -142,6 +176,10 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="install mui" />
     <MESSAGE value="initial commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="initial commit" />
+    <MESSAGE value="install @emotion/react" />
+    <MESSAGE value="install @emotion/styled" />
+    <MESSAGE value="implementing GUI for SWA" />
+    <MESSAGE value="define Props for data flow for SWA" />
+    <option name="LAST_COMMIT_MESSAGE" value="define Props for data flow for SWA" />
   </component>
 </project>
