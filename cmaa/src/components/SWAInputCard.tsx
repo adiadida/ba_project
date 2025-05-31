@@ -1,6 +1,6 @@
 import {GenericInputCard, InputProps} from "@/components/GenericInputCard";
 import {SWAInputs} from "@/components/SWAInputs";
-import {router} from "next/client";
+import {useRouter} from "next/router";
 
 export const SWAInputCard = ({inputs, onData}: SWAInputCardProps) => {
 
@@ -12,11 +12,17 @@ export const SWAInputCard = ({inputs, onData}: SWAInputCardProps) => {
         // Initialize table with size from inputs
         // For example:
         // setTableSize(inputs.size);
+        // send inputs to pages.tsx of inputswa
+        // create as many tables as decicionMakers
+        // table has rows=criteria +1
+        // table has columns=alternatives+2
+
     };
 
     const handleButtonClick = () => {
         handleNext(inputs); // pass the inputs object directly
         // then navigate
+        const router = useRouter();
         router.push("/groupdecision/inputswa")
     };
 
