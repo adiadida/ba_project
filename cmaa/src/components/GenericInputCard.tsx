@@ -48,8 +48,8 @@ export interface DataInputProps {
 }
 
 export type InputProps = {
-    criteria?: number | undefined
     alternatives?: number | undefined
+    criteria?: number | undefined
     decisionMakers?: number | undefined
 }
 
