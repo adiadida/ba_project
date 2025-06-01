@@ -1,13 +1,15 @@
 'use client'
 import {GenericHeader} from "@/components/GenericHeader";
 import Grid from "@mui/material/Grid";
-import {useSearchParams} from 'next/navigation'; // important with new update!
+// important with new update!
+import {useSearchParams} from 'next/navigation';
+import {SWATables} from "@/components/SWATables";
 
 export default function SWAPage() {
     //get params
     const searchParams = useSearchParams()
     const alternatives = searchParams.get("alternatives");
-    const criteria = searchParams.get("criterias");
+    const criteria = searchParams.get("criteria");
     const decisionMakers = searchParams.get("decisionMakers");
 
     // Convert from string to number
@@ -29,17 +31,7 @@ export default function SWAPage() {
     return (
         <Grid container spacing={2}>
             <GenericHeader title={'Nutzwertanalyse'}/>
-            <Grid container spacing={4} size={{xs: 11, md: 7, lg: 8}}
-                  sx={{
-                      justifyContent: "center",
-                      alignItems: "center",
-                  }}
-            >
-                <Grid size={{xs: 11, md: 7, lg: 8}}>
-
-                </Grid>
-
-            </Grid>
+            <SWATables numCols={numA+2} numRows={numC+2} numDM={numDM}/>
         </Grid>
     )
 }
