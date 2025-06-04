@@ -1,26 +1,28 @@
 import {
     DataGrid,
-    GridCellEditStopParams,
-    GridColDef, GridValueGetter,
-    GridValueParser
+    GridColDef,
+    GridValueParser,
 } from "@mui/x-data-grid";
-import {useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
+
+// i.. m Zeilen
+// j.. n Spalten
 
 export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
 
-
-    function generateColHeaders(): string[] {
+    // generate names of cols - cashed
+    const generateColHeaders = useCallback(() => {
         let colHeaders: string[] = ['criteria', 'criterion weight'];
 
         for (let i: number = 2; i < numCols; i++) {
             colHeaders.push(`alternative ${i - 1}`);
         }
         return colHeaders;
-    }
+    }, [numCols]);
 
-    // define getter, setter, parser for differnt col types
 
-    // parser
+    // parser for different col types
+    // error handling: parser adjusts user inputs
     // col type: names of criteria = string
     const parseStringCell: GridValueParser = (value): string => {
         return String(value);
@@ -39,7 +41,7 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
     const parseJudgementCell: GridValueParser = (value): string | number | undefined => {
         const valStr: string = String(value);
 
-        if (isNaN(parseInt(valStr,10))) {
+        if (isNaN(parseInt(valStr, 10))) {
             return String(value); //alternative names
         } else if (value) { // judgements as numbers
 
@@ -52,24 +54,7 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
         } else return undefined;
     }
 
-    //getter
-    /*const getValue: GridValueGetter = (params) => {
-     if (params){
-         const { id, field } = params;
-    const row = rowsData.find(row => row.id === id);
-    if (!row) return undefined;
-
-    if (field === 'criteria') {
-        return row.criteria;
-    } else if (field === 'weight') {
-        return row.weight;
-    } else {
-        return row[field];
-    }
-     }
-    return undefined;
-};*/
-
+    // generate {}[] for cols
     function generateCols() {
         const colHeaders: string[] = generateColHeaders();
         let columns: GridColDef[] = [
@@ -79,7 +64,6 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
                 width: 150,
                 editable: true,
                 valueParser: parseStringCell,
-                //valueGetter:getValue,
             },
             {
                 field: 'weight',
@@ -87,7 +71,6 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
                 width: 150,
                 editable: true,
                 valueParser: parsePercentCell,
-                //valueGetter:getValue,
             },
         ];
 
@@ -99,8 +82,6 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
                     width: 150,
                     editable: true,
                     valueParser: parseJudgementCell,
-                    //valueGetter:getValue,
-
                 }
             )
         }
@@ -110,7 +91,8 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
 
     const cols = generateCols();
 
-    function generateRowHeaders(): string[] {
+    // generate names for rows - cashed
+    const generateRowHeaders = useCallback(() => {
         let rowHeaders: string[] = ['criteria'];
 
         for (let i: number = 1; i < numRows - 1; i++) {
@@ -118,16 +100,24 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
         }
         rowHeaders.push('weighted sum');
         return rowHeaders;
-    }
+    }, [numRows]);
+
 
     // type for properties based on variable number of alternatives
     type AltProperties = {
         [key: string]: any;
     };
 
+    interface Row {
+        id: number;
+        criteria: string;
+        weight: number | undefined;
 
-    // Initialize rows
-    const initializeRows = () => {
+        [p: string]: any;
+    }
+
+    // generate initial {}[] for rows
+    const initializeRows: () => Array<Row> = () => {
         const rowHeaders = generateRowHeaders();
 
         //create missing properties in data object
@@ -168,30 +158,107 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
         return dataRows;
     };
 
-    // Hook important for user inputs
-    const [rowsData, setRowsData] = useState(initializeRows());
+    // only initial data - without user inputs
+    const [rows, setRows] = useState(() => initializeRows()); // useState to update data
+    const prevSumsRef = useRef<{ [key: string]: number } | null>(null); // useRef to prevent infinite loop
+
+    // process user inputs and update row data
+    const handleProcessRowUpdate = (newRow: Row) => {
+
+        // update old row
+        let updatedRows = rows.map((row) =>
+            row.id === newRow.id ? {...row, ...newRow} : row
+        );
+        // update data
+        setRows(updatedRows);
+
+        // return updated row
+        return updatedRows.find(row => row.id === newRow.id)!;
+
+    }
+
+    // Compute weighted sum of each alternative
+    const computeWeightedSums = (rows: Array<Row>): { [key: string]: number } => {
 
 
-    // Handle cell edit stop event
-    const handleCellEditStop = (params: GridCellEditStopParams) => {
+        // Extract property names containing 'alt'
+        const altProperties: string[] = Object.keys(rows[0]).filter(key => key.includes('alt'));
 
+        const sums: { [key: string]: number } = {};
+        // Initialize sums for each alternative
+        altProperties.forEach((alt) => {
+            sums[alt] = 0;
+        });
+
+        // Compute sums
+        for (let i = 0; i < rows.length; i++) { // iterates over rows
+            const row = rows[i];
+            console.log(row)
+            /*row = {alt1: 1, alt2: 3, criteria: "criterion 1", id: 0, weight: 50}*/
+
+            if (row.id !== 1000) {
+                const weight = row.weight ?? 0;
+
+                for (let j = 0; j < altProperties.length; j++) { // iterate over alternative cols
+                    const altN = altProperties[j];
+                    const judgement: number = row[altN] ?? 0;
+                    sums[altN] += (weight * 0.01) * judgement;
+                }
+            }
+        }
+
+        // round to second decimal place
+
+        for (let sumsKey in sums) {
+            sums[sumsKey] = Number(sums[sumsKey].toFixed(2));
+        }
+
+        return sums;
     };
 
-
-
+    // useEffect to update weighted sum row when rows data changes
+    useEffect(() => {
+        const sums = computeWeightedSums(rows);
+        // Check if sums have changed to prevent unnecessary state updates
+        const sumsChanged = JSON.stringify(sums) !== JSON.stringify(prevSumsRef.current);
+        if (sumsChanged) {
+            prevSumsRef.current = sums;
+            const sumRowIndex = rows.findIndex(r => r.id === 1000);
+            if (sumRowIndex !== -1) {
+                // Update existing sum row
+                const newSumRow: Row = {
+                    ...rows[sumRowIndex],
+                    ...sums,
+                };
+                setRows(prevRows => {
+                    const newRows = [...prevRows];
+                    newRows[sumRowIndex] = newSumRow;
+                    return newRows;
+                });
+            } else {
+                // Add new sum row if missing
+                const newSumRow: Row = {
+                    id: 1000,
+                    criteria: 'weighted sum',
+                    weight: undefined,
+                    ...sums,
+                };
+                setRows(prevRows => [...prevRows, newSumRow]);
+            }
+        }
+    }, [rows]); // Runs whenever rows change
 
     return (
+
         <DataGrid
             columns={cols}
-            rows={rowsData}
+            rows={rows}
             //make weighted sum row not editable - hallelujah!
             isCellEditable={(params) => params.id !== 1000}
-            onCellEditStop={handleCellEditStop}
+            processRowUpdate={handleProcessRowUpdate}
             autoPageSize={false}
             hideFooter={true}
-        >
-
-        </DataGrid>
+        />
     )
 
 }
