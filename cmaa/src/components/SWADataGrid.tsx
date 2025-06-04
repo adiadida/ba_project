@@ -4,6 +4,8 @@ import {
     GridValueParser,
 } from "@mui/x-data-grid";
 import {useCallback, useEffect, useRef, useState} from "react";
+import {Button, Grid, Typography} from "@mui/material";
+import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
 
 // i.. m Zeilen
 // j.. n Spalten
@@ -248,17 +250,73 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
         }
     }, [rows]); // Runs whenever rows change
 
-    return (
 
-        <DataGrid
-            columns={cols}
-            rows={rows}
-            //make weighted sum row not editable - hallelujah!
-            isCellEditable={(params) => params.id !== 1000}
-            processRowUpdate={handleProcessRowUpdate}
-            autoPageSize={false}
-            hideFooter={true}
-        />
+    // Function to convert rows to CSV and trigger download
+    const downloadCSV = () => {
+        if (rows.length === 0) return;
+
+        // Get headers from columns
+        const headers = cols.map(col => col.headerName || col.field);
+
+        // Prepare CSV content
+        const csvRows = [
+            headers.join(','), // header row
+            ...rows.map(row => {
+                return headers.map(header => {
+                    const field = cols.find(c => c.headerName === header)?.field || header;
+                    const value = row[field];
+                    // Escape quotes and commas in data
+                    if (value === undefined || value === null) return '';
+                    const valStr = String(value).replace(/"/g, '""');
+                    if (valStr.includes(',') || valStr.includes('"')) {
+                        return `"${valStr}"`;
+                    }
+                    return valStr;
+                }).join(',');
+            }),
+        ];
+
+        const csvContent = csvRows.join('\n');
+
+        // Create a blob and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Set filename
+        const filename = `decisionmaker_${id}.csv`;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+
+    return (
+        <Grid container spacing={2} >
+            <Grid container direction={'row'}  spacing={2} alignItems={'space-between'} size={12}>
+                <Grid size={8}>
+                    <Typography variant={'h6'}>Decision Maker {id}</Typography>
+                </Grid>
+
+                <Grid size={4}>
+                    <Button startIcon={<FileDownloadRoundedIcon/>} size="medium" variant={'contained'} onClick={downloadCSV}>csv Download</Button>
+                </Grid>
+            </Grid>
+            <Grid size={12}>
+                <DataGrid
+                    columns={cols}
+                    rows={rows}
+                    //make weighted sum row not editable - hallelujah!
+                    isCellEditable={(params) => params.id !== 1000}
+                    processRowUpdate={handleProcessRowUpdate}
+                    autoPageSize={false}
+                    hideFooter={true}
+                />
+            </Grid>
+        </Grid>
     )
 
 }
