@@ -1,7 +1,7 @@
 import Grid from "@mui/material/Grid";
-import {SWADataGrid} from "@/components/SWADataGrid";
+import {SAWDataGrid} from "@/components/saw/SAWDataGrid";
 
-export const SWATables = ({numCols, numRows, numDM}:SWATablesProps) => {
+export const SAWTables = ({numCols, numRows, numDM}:SWATablesProps) => {
 
     // Generate an array of React elements representing the tables
   const generateTables = () => {
@@ -9,7 +9,7 @@ export const SWATables = ({numCols, numRows, numDM}:SWATablesProps) => {
     for (let i = 0; i < numDM; i++) {
       tables.push(
         <Grid key={i} size={{xs: 11, md: 5, lg: 3.8}}>
-          <SWADataGrid id={`${i + 1}`} numCols={numCols} numRows={numRows} />
+          <SAWDataGrid id={`${i + 1}`} numCols={numCols} numRows={numRows} />
         </Grid>
       );
     }

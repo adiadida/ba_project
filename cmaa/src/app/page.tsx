@@ -1,4 +1,4 @@
-import {GenericHeader} from "@/components/GenericHeader";
+import {GenericHeader} from "@/components/generics/GenericHeader";
 
 
 export default function Home() {

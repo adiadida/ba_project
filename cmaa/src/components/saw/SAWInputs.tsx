@@ -1,10 +1,10 @@
 'use client'
 
 import {Grid} from "@mui/material";
-import {GenericInput} from "@/components/GenericInput";
-import {SWAInputCardProps} from "@/components/SWAInputCard";
+import {GenericInput} from "@/components/generics/GenericInput";
+import {SWAInputCardProps} from "@/components/saw/SAWInputCard";
 
-export const SWAInputs = ({inputs, onData}: SWAInputCardProps) => {
+export const SAWInputs = ({inputs, onData}: SWAInputCardProps) => {
 
     const handleInputChange = (name: string, value: string) => {
         // Convert value to number if needed
@@ -29,7 +29,7 @@ export const SWAInputs = ({inputs, onData}: SWAInputCardProps) => {
             <GenericInput typoText={'Erfüllungsgrad der Kriterien'} fieldName={''}
                           fieldLabelText={'in Zahlen 1..5'} isRequired={false} isDisabled={true}
             />
-            <GenericInput typoText={'Priorisierung der Kriterien'} fieldName={''} fieldLabelText={'in Prozent, z.B. 0,8'}
+            <GenericInput typoText={'Priorisierung der Kriterien'} fieldName={''} fieldLabelText={'in Zahlen 1..5'}
                           isRequired={false} isDisabled={true}
             />
             <GenericInput typoText={'Anzahl der zu bewertenden Alternativen'} fieldName={'alternatives'} fieldLabelText={'Zahl'}

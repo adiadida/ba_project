@@ -1,8 +1,8 @@
-import {GenericInputCard, InputProps} from "@/components/GenericInputCard";
-import {SWAInputs} from "@/components/SWAInputs";
+import {GenericInputCard, InputProps} from "@/components/generics/GenericInputCard";
+import {SAWInputs} from "@/components/saw/SAWInputs";
 import {useRouter} from "next/navigation";
 
-export const SWAInputCard = ({inputs, onData}: SWAInputCardProps) => {
+export const SAWInputCard = ({inputs, onData}: SWAInputCardProps) => {
 
     // Hooks need to be declared in the first line of a function or outside
     const router = useRouter();
@@ -12,7 +12,7 @@ export const SWAInputCard = ({inputs, onData}: SWAInputCardProps) => {
     };
 
     const handleNext = (inputs: InputProps) => {
-        // send inputs to pages.tsx of inputswa -> create tables for each decisionmaker
+        // send inputs to pages.tsx of inputsaw -> create tables for each decisionmaker
         // table has rows=criteria+2 and columns=alternatives+2
 
         // handle undefined inputs
@@ -42,8 +42,8 @@ export const SWAInputCard = ({inputs, onData}: SWAInputCardProps) => {
     };
 
     return (
-        <GenericInputCard cardTitle={'Nutzwertanalyse (SWA)'}
-                          inputChild={<SWAInputs inputs={inputs} onData={handleDataChange}/>}
+        <GenericInputCard cardTitle={'Schritt 1: Nutzwerte berechnen (SAW)'}
+                          inputChild={<SAWInputs inputs={inputs} onData={handleDataChange}/>}
                           buttonTitle={'generieren'} onClick={handleButtonClick} inputs={inputs}
                           onChange={handleDataChange}/>
     )

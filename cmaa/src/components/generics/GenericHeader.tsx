@@ -1,6 +1,6 @@
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
-import {Grid} from "@mui/material";
+import {Grid, Typography} from "@mui/material";
 import React from "react";
 
 /**
@@ -8,7 +8,7 @@ import React from "react";
  * **/
 export const GenericHeader = ({title}: GenericHeaderProps) => {
     return (
-        <Grid size={{ xs: 12, md: 12, lg: 12 }}>
+        <Grid size={12}>
                 <AppBar position="static">
                     <Toolbar>
                         <Grid
@@ -18,7 +18,8 @@ export const GenericHeader = ({title}: GenericHeaderProps) => {
                                 justifyContent={"space-between"}
                                 direction={"row"}
                         >
-                            {title}
+                            <Typography variant={'h5'}>{title}</Typography>
+
 
                         </Grid>
                     </Toolbar>

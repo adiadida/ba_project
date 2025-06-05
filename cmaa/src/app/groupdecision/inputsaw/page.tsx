@@ -1,9 +1,9 @@
 'use client'
-import {GenericHeader} from "@/components/GenericHeader";
+import {GenericHeader} from "@/components/generics/GenericHeader";
 import Grid from "@mui/material/Grid";
 // important with new update!
 import {useSearchParams} from 'next/navigation';
-import {SWATables} from "@/components/SWATables";
+import {SAWTables} from "@/components/saw/SAWTables";
 
 export default function SWAPage() {
     //get params
@@ -17,21 +17,21 @@ export default function SWAPage() {
     const numC: number = criteria ? parseInt(criteria as string, 10) : 1;
     const numDM: number = decisionMakers ? parseInt(decisionMakers as string, 10) : 1;
 
-    //function generateTables (numDM: number, numA: number, numC: number){
-        // Create tables array
-        //const newTables = [];
-        //for (let i = 0; i < numDM; i++) {
-            //newTables.push({
-                //rows: numC + 2, // row of alternatives and weighted sum
-                //columns: numA + 2, // cols of criteria, weights
-            //});
-        //}
-    //}
+    /*function generateTables (numDM: number, numA: number, numC: number){
+        Create tables array
+        const newTables = [];
+        for (let i = 0; i < numDM; i++) {
+            newTables.push({
+                rows: numC + 3, // row of header, criteria, weighted sum and rank
+                columns: numA + 2, // cols of criteria, weights, alternatives
+            });
+        }
+    }*/
 
     return (
         <Grid container spacing={2}>
             <GenericHeader title={'Nutzwertanalyse'}/>
-            <SWATables numCols={numA+2} numRows={numC+2} numDM={numDM}/>
+            <SAWTables numCols={numA+2} numRows={numC+3} numDM={numDM}/>
         </Grid>
     )
 }

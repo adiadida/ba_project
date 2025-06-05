@@ -1,10 +1,9 @@
 'use client'
-import {GenericHeader} from "@/components/GenericHeader";
+import {GenericHeader} from "@/components/generics/GenericHeader";
 import Grid from "@mui/material/Grid";
-import {SWAInputCard} from "@/components/SWAInputCard";
+import {SAWInputCard} from "@/components/saw/SAWInputCard";
 import {useState} from "react";
-import {InputProps} from "@/components/GenericInputCard";
-import {Box} from "@mui/system";
+import {InputProps} from "@/components/generics/GenericInputCard";
 
 export default function DecisionPage() {
 
@@ -21,19 +20,16 @@ export default function DecisionPage() {
     return (
         <Grid container spacing={2}>
             <GenericHeader title={'Gruppenentscheidung'}/>
-            <Grid container spacing={4} size={{xs: 11, md: 7, lg: 8}}
+            <Grid container spacing={4} size={{xs: 11, md: 7, lg: 6}}
                   sx={{
+                      alignItems: "flex-start",
                       justifyContent: "center",
-                      alignItems: "center",
                   }}
             >
-                <Grid size={{xs: 11, md: 7, lg: 8}}>
-                    <SWAInputCard inputs={inputs} onData={handleInputChange}/>
+                <Grid size={11}>
+                    <SAWInputCard inputs={inputs} onData={handleInputChange}/>
                 </Grid>
 
-                <Grid size={{xs: 11, md: 7, lg: 8}}>
-                    <Box display="flex" justifyContent="flex-end"></Box>
-                </Grid>
             </Grid>
         </Grid>
 

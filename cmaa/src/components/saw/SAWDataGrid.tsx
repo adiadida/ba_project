@@ -10,7 +10,7 @@ import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
 // i.. m Zeilen
 // j.. n Spalten
 
-export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
+export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
 
     // generate names of cols - cashed
     const generateColHeaders = useCallback(() => {
@@ -40,7 +40,7 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
         return val;
     }
     // col type: judgement alternatives = int on likert scale 1..5
-    const parseJudgementCell: GridValueParser = (value): string | number | undefined => {
+    const parseLikertCell: GridValueParser = (value): string | number | undefined => {
         const valStr: string = String(value);
 
         if (isNaN(parseInt(valStr, 10))) {
@@ -72,7 +72,7 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
                 headerName: colHeaders[1],
                 width: 150,
                 editable: true,
-                valueParser: parsePercentCell,
+                valueParser: parseLikertCell,
             },
         ];
 
@@ -83,7 +83,7 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
                     headerName: colHeaders[i],
                     width: 150,
                     editable: true,
-                    valueParser: parseJudgementCell,
+                    valueParser: parseLikertCell,
                 }
             )
         }
@@ -101,6 +101,8 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
             rowHeaders.push(`criterion ${i}`);
         }
         rowHeaders.push('weighted sum');
+        rowHeaders.push('rank');
+
         return rowHeaders;
     }, [numRows]);
 
@@ -151,6 +153,15 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
         dataRows.push(
             {
                 id: 1000,
+                criteria: rowHeaders[rowHeaders.length - 2],
+                weight: undefined,
+                ...altProperties
+            }
+        );
+
+        dataRows.push(
+            {
+                id: 1001,
                 criteria: rowHeaders[rowHeaders.length - 1],
                 weight: undefined,
                 ...altProperties
@@ -204,7 +215,7 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
                 for (let j = 0; j < altProperties.length; j++) { // iterate over alternative cols
                     const altN = altProperties[j];
                     const judgement: number = row[altN] ?? 0;
-                    sums[altN] += (weight * 0.01) * judgement;
+                    sums[altN] += weight * judgement;
                 }
             }
         }
@@ -310,11 +321,20 @@ export const SWADataGrid = ({id, numCols, numRows}: DataGridProps) => {
                     columns={cols}
                     rows={rows}
                     //make weighted sum row not editable - hallelujah!
-                    isCellEditable={(params) => params.id !== 1000}
+                    isCellEditable={(params) => (params.id !== 1000 && params.id !== 1001)}
                     processRowUpdate={handleProcessRowUpdate}
                     autoPageSize={false}
                     hideFooter={true}
                 />
+            </Grid>
+            <Grid container direction={'row'}  spacing={2} alignItems={'space-between'} size={12}>
+                <Grid size={5.5}>
+                    <Typography variant={'h6'}>Priorisierung des Kriteriums</Typography>
+                </Grid>
+
+                <Grid size={5.5}>
+                    <Button startIcon={<FileDownloadRoundedIcon/>} size="medium" variant={'contained'} onClick={downloadCSV}>csv Download</Button>
+                </Grid>
             </Grid>
         </Grid>
     )

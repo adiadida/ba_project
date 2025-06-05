@@ -2,7 +2,7 @@
 
 import {Grid, TextField, Typography} from "@mui/material";
 import {ChangeEvent} from "react";
-import {InputProps} from "@/components/GenericInputCard";
+import {InputProps} from "@/components/generics/GenericInputCard";
 
 export const GenericInput = ({
                                  typoText,
