@@ -6,6 +6,7 @@ import {
 import {useCallback, useEffect, useRef, useState} from "react";
 import {Button, Grid, Typography} from "@mui/material";
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
+import {GenericLikertCard} from "@/components/generics/GenericLikertCard";
 
 // i.. m Zeilen
 // j.. n Spalten
@@ -141,11 +142,11 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
         }> = [];
 
         // Criteria rows
-        for (let r = 0; r < rowHeaders.length - 2; r++) {
+        for (let r = 0; r < rowHeaders.length - 3; r++) {
             dataRows.push({
                 id: r,
                 criteria: rowHeaders[r + 1],
-                weight: 50,
+                weight: 2,
                 ...altProperties
             });
         }
@@ -190,7 +191,7 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
 
     }
 
-    // Compute weighted sum of each alternative
+    // Compute weighted sum of each alternative - pure function
     const computeWeightedSums = (rows: Array<Row>): { [key: string]: number } => {
 
 
@@ -229,7 +230,7 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
         return sums;
     };
 
-    // useEffect to update weighted sum row when rows data changes
+    // useEffect to update weighted sum row when rows data changes - change of data object
     useEffect(() => {
         const sums = computeWeightedSums(rows);
         // Check if sums have changed to prevent unnecessary state updates
@@ -259,6 +260,7 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
                 setRows(prevRows => [...prevRows, newSumRow]);
             }
         }
+
     }, [rows]); // Runs whenever rows change
 
 
@@ -290,7 +292,7 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
         const csvContent = csvRows.join('\n');
 
         // Create a blob and trigger download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -306,14 +308,15 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
 
 
     return (
-        <Grid container spacing={2} >
-            <Grid container direction={'row'}  spacing={2} alignItems={'space-between'} size={12}>
+        <Grid container spacing={2}>
+            <Grid container direction={'row'} spacing={2} justifyContent={'space-between'} size={12}>
                 <Grid size={8}>
                     <Typography variant={'h6'}>Decision Maker {id}</Typography>
                 </Grid>
 
                 <Grid size={4}>
-                    <Button startIcon={<FileDownloadRoundedIcon/>} size="medium" variant={'contained'} onClick={downloadCSV}>csv Download</Button>
+                    <Button startIcon={<FileDownloadRoundedIcon/>} size="medium" variant={'contained'}
+                            onClick={downloadCSV}>csv Download</Button>
                 </Grid>
             </Grid>
             <Grid size={12}>
@@ -327,13 +330,18 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
                     hideFooter={true}
                 />
             </Grid>
-            <Grid container direction={'row'}  spacing={2} alignItems={'space-between'} size={12}>
-                <Grid size={5.5}>
-                    <Typography variant={'h6'}>Priorisierung des Kriteriums</Typography>
+            <Grid container direction={'row'} spacing={2} alignItems={'center'} justifyContent={'space-between'}
+                  size={12}>
+                <Grid size={6}>
+                    <GenericLikertCard title={'Priorisierung des Kriteriums'} one={'ganz und gar nicht wichtig'}
+                                       two={'nicht wichtig'} three={'neutral'} four={'wichtig'}
+                                       five={'voll und ganz wichtig'}/>
                 </Grid>
 
-                <Grid size={5.5}>
-                    <Button startIcon={<FileDownloadRoundedIcon/>} size="medium" variant={'contained'} onClick={downloadCSV}>csv Download</Button>
+                <Grid size={6}>
+                    <GenericLikertCard title={'Erfüllung des Kriteriums'} one={'ganz und gar nicht erfüllt'}
+                                       two={'nicht erfüllt'} three={'neutral'} four={'erfüllt'}
+                                       five={'voll und ganz erfüllt'}/>
                 </Grid>
             </Grid>
         </Grid>
