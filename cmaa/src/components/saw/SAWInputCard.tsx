@@ -29,7 +29,7 @@ export const SAWInputCard = ({inputs, onData}: SWAInputCardProps) => {
         }).toString();
 
         // Navigate to SWAPage with params
-        router.push(`/groupdecision/inputswa?${query}`);
+        router.push(`/groupdecision/inputsaw?${query}`);
 
 
     };
