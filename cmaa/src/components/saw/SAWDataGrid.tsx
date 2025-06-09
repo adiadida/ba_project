@@ -112,6 +112,7 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
         [key: string]: any;
     };
 
+    //interface row object
     interface Row {
         id: number;
         criteria: string;
@@ -193,7 +194,6 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
     // Compute weighted sum of each alternative - pure function
     const computeWeightedSums = (rows: Array<Row>): { [key: string]: number } => {
 
-
         // Extract property names containing 'alt'
         const altProperties: string[] = Object.keys(rows[0]).filter(key => key.includes('alt'));
 
@@ -229,35 +229,78 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
         return sums;
     };
 
-    // useEffect to update weighted sum row when rows data changes - change of data object
+// @params is sums object
+    function assignRanks(sums: { [key: string]: number }): { [key: string]: number } {
+        // Convert sums object into an array of [alternative, sum]
+        const altSumArray = Object.entries(sums);
+        // Sort alternatives descending by sum
+        altSumArray.sort((a, b) => b[1] - a[1]);
+
+        // Assign ranks
+        const ranks: { [key: string]: number } = {};
+        let currentRank = 1;
+        for (let i = 0; i < altSumArray.length; i++) {
+            const [alt, sum] = altSumArray[i];
+            // Handle ties: alternatives with same sum get same rank
+            if (i > 0 && sum === altSumArray[i - 1][1]) {
+                // Same rank as previous
+                ranks[alt] = currentRank;
+            } else {
+                // New rank
+                currentRank = i + 1;
+                ranks[alt] = currentRank;
+            }
+        }
+        return ranks;
+    }
+
+    // useEffect to update weighted sum row, rank row when rows data changes -> change of data object
     useEffect(() => {
         const sums = computeWeightedSums(rows);
+        const ranks = assignRanks(sums);
         // Check if sums have changed to prevent unnecessary state updates
         const sumsChanged = JSON.stringify(sums) !== JSON.stringify(prevSumsRef.current);
         if (sumsChanged) {
             prevSumsRef.current = sums;
-            const sumRowIndex = rows.findIndex(r => r.id === 1000);
-            if (sumRowIndex !== -1) {
-                // Update existing sum row
-                const newSumRow: Row = {
-                    ...rows[sumRowIndex],
-                    ...sums,
-                };
-                setRows(prevRows => {
-                    const newRows = [...prevRows];
-                    newRows[sumRowIndex] = newSumRow;
-                    return newRows;
-                });
-            } else {
-                // Add new sum row if missing
-                const newSumRow: Row = {
+            // Prepare new rows
+            const newRows = [...rows];
+
+            // Update sum row
+            const sumRowIndex = newRows.findIndex(r => r.id === 1000);
+            const sumRow = sumRowIndex !== -1
+                ? {...newRows[sumRowIndex], ...sums}
+                : {
                     id: 1000,
                     criteria: 'weighted sum',
                     weight: undefined,
                     ...sums,
                 };
-                setRows(prevRows => [...prevRows, newSumRow]);
+
+            if (sumRowIndex !== -1) {
+                newRows[sumRowIndex] = sumRow;
+            } else {
+                newRows.push(sumRow);
             }
+
+            // Update rank row
+            const rankRowIndex = newRows.findIndex(r => r.id === 1001);
+            const rankRow = rankRowIndex !== -1
+                ? {...newRows[rankRowIndex], ...ranks}
+                : {
+                    id: 1001,
+                    criteria: 'rank',
+                    weight: undefined,
+                    ...ranks,
+                };
+
+            if (rankRowIndex !== -1) {
+                newRows[rankRowIndex] = rankRow;
+            } else {
+                newRows.push(rankRow);
+            }
+
+            // Set rows once
+            setRows(newRows);
         }
 
     }, [rows]); // Runs whenever rows change
