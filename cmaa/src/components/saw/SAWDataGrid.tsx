@@ -6,7 +6,6 @@ import {
 import {useCallback, useEffect, useRef, useState} from "react";
 import {Button, Grid, Typography} from "@mui/material";
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
-import {GenericLikertCard} from "@/components/generics/GenericLikertCard";
 
 // i.. m Zeilen
 // j.. n Spalten
@@ -98,7 +97,7 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
     const generateRowHeaders = useCallback(() => {
         let rowHeaders: string[] = ['criteria'];
 
-        for (let i: number = 1; i < numRows - 1; i++) {
+        for (let i: number = 1; i < numRows - 2; i++) {
             rowHeaders.push(`criterion ${i}`);
         }
         rowHeaders.push('weighted sum');
@@ -147,7 +146,7 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
                 id: r,
                 criteria: rowHeaders[r + 1],
                 weight: 2,
-                ...altProperties
+                ...altProperties,
             });
         }
 
@@ -330,20 +329,7 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
                     hideFooter={true}
                 />
             </Grid>
-            <Grid container direction={'row'} spacing={2} alignItems={'center'} justifyContent={'space-between'}
-                  size={12}>
-                <Grid size={6}>
-                    <GenericLikertCard title={'Priorisierung des Kriteriums'} one={'ganz und gar nicht wichtig'}
-                                       two={'nicht wichtig'} three={'neutral'} four={'wichtig'}
-                                       five={'voll und ganz wichtig'}/>
-                </Grid>
 
-                <Grid size={6}>
-                    <GenericLikertCard title={'Erfüllung des Kriteriums'} one={'ganz und gar nicht erfüllt'}
-                                       two={'nicht erfüllt'} three={'neutral'} four={'erfüllt'}
-                                       five={'voll und ganz erfüllt'}/>
-                </Grid>
-            </Grid>
         </Grid>
     )
 
