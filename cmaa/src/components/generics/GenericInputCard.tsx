@@ -25,7 +25,7 @@ export const GenericInputCard = ({
             </CardContent>
             <CardActions>
                 <Button
-                    variant="outlined"
+                    variant="contained"
                     onClick={onClick}
                     disabled={isAnyInputNaN}
                 >{buttonTitle}</Button>
