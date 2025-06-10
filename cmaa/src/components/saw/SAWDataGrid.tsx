@@ -10,7 +10,7 @@ import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
 // i.. m Zeilen
 // j.. n Spalten
 
-export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
+export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps) => {
 
     // generate names of cols - cashed
     const generateColHeaders = useCallback(() => {
@@ -174,6 +174,7 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
 
     // only initial data - without user inputs
     const [rows, setRows] = useState(() => initializeRows()); // useState to update data
+    const prevRowsRef = useRef(rows); // as safeguard from infinite loop useEffect
     const prevSumsRef = useRef<{ [key: string]: number } | null>(null); // useRef to prevent infinite loop
 
     // process user inputs and update row data
@@ -255,12 +256,16 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
     }
 
     // useEffect to update weighted sum row, rank row when rows data changes -> change of data object
+    // send data to SAWTables
     useEffect(() => {
         const sums = computeWeightedSums(rows);
         const ranks = assignRanks(sums);
+
         // Check if sums have changed to prevent unnecessary state updates
         const sumsChanged = JSON.stringify(sums) !== JSON.stringify(prevSumsRef.current);
-        if (sumsChanged) {
+        // additional check to rows
+        const rowsChanged = JSON.stringify(rows) !== JSON.stringify(prevRowsRef.current);
+        if (sumsChanged || rowsChanged) {
             prevSumsRef.current = sums;
             // Prepare new rows
             const newRows = [...rows];
@@ -299,11 +304,16 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
                 newRows.push(rankRow);
             }
 
+            // notify parent to rows update
+            if (onDataChange) {
+                onDataChange(newRows);
+            }
+
             // Set rows once
             setRows(newRows);
         }
 
-    }, [rows]); // Runs whenever rows change
+    }, [rows, onDataChange]); // Runs whenever rows change
 
 
     // Function to convert rows to CSV and trigger download
@@ -357,7 +367,7 @@ export const SAWDataGrid = ({id, numCols, numRows}: DataGridProps) => {
                 </Grid>
 
                 <Grid size={4}>
-                    <Button startIcon={<FileDownloadRoundedIcon/>} size="medium" variant={'contained'}
+                    <Button startIcon={<FileDownloadRoundedIcon/>} size="medium" variant={'outlined'}
                             onClick={downloadCSV}>csv Download</Button>
                 </Grid>
             </Grid>
@@ -382,4 +392,5 @@ export type DataGridProps = {
     id: string;
     numCols: number;
     numRows: number;
+    onDataChange: (data: any) => void
 }
