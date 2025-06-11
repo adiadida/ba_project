@@ -5,7 +5,7 @@ import Grid from "@mui/material/Grid";
 import {useSearchParams} from 'next/navigation';
 import {SAWTables} from "@/components/saw/SAWTables";
 
-export default function SWAPage() {
+export default function SAWPage() {
     //get params
     const searchParams = useSearchParams()
     const alternatives = searchParams.get("alternatives");
@@ -30,7 +30,7 @@ export default function SWAPage() {
 
     return (
         <Grid container spacing={2}>
-            <GenericHeader title={'Nutzwertanalyse'}/>
+            <GenericHeader title={'Schritt 1: Nutzwertanalyse'}/>
             <SAWTables numCols={numA+2} numRows={numC+3} numDM={numDM}/>
         </Grid>
     )

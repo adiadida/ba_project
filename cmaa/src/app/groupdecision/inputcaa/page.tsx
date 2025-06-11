@@ -52,5 +52,5 @@ export default function CAAPage() {
     // todo: aggPreferences .. for each criteria the criterion weights of every decisionMaker
 
 
-    return (<GenericHeader title={'Combinatorial Acceptability Analysis'}/>)
+    return (<GenericHeader title={'Schritt 2: Combinatorial Acceptability Analysis'}/>)
 }
