@@ -3,6 +3,7 @@
 import {GenericHeader} from "@/components/generics/GenericHeader";
 import {useSearchParams} from "next/navigation"; // useRouter hook should be imported from next/navigation
 import {useEffect, useState} from "react";
+import {Grid} from "@mui/material";
 
 export default function CAAPage() {
 
@@ -10,7 +11,11 @@ export default function CAAPage() {
     const [decisionMakerData, setDecisionMakerData] = useState<{ [dmId: string]: any }>({});
     const searchParams = useSearchParams()
 
+    // State to hold aggregated preferences
+    const [aggregatedPreferences, setAggregatedPreferences] = useState<AggregatedPreference[]>([]);
 
+
+    // Fetch and parse data from URL params
     useEffect(() => {
 
         // newData[dmId] = {
@@ -43,14 +48,256 @@ export default function CAAPage() {
             }
         });
 
-        //console.log('Generated Data:', newData);
+        console.log('Generated Data:', newData);
         setDecisionMakerData(newData);
     }, [searchParams]);
 
-    // todo: function that generates aggregation of decisionMakerData
+    /* example data object:
+ {
+  "data": {
+    "1": [
+      {
+        "id": 0,
+        "criteria": "criterion 1",
+        "weight": 1,
+        "alt1": 2,
+        "alt2": 5,
+        "alt3": 1
+      },
+      {
+        "id": 1,
+        "criteria": "criterion 2",
+        "weight": 5,
+        "alt1": 3,
+        "alt2": 4,
+        "alt3": 2
+      },
+      {
+        "id": 2,
+        "criteria": "criterion 3",
+        "weight": 2,
+        "alt1": 4,
+        "alt2": 3,
+        "alt3": 3
+      },
+      {
+        "id": 1000,
+        "criteria": "weighted sum",
+        "alt1": 25,
+        "alt2": 31,
+        "alt3": 17,
+        "alt4": 0,
+        "alt5": 0
+      },
+      {
+        "id": 1001,
+        "criteria": "rank",
+        "alt1": 2,
+        "alt2": 1,
+        "alt3": 3,
+        "alt4": 4,
+        "alt5": 4
+      }
+    ],
+    "2": [
+      {
+        "id": 0,
+        "criteria": "criterion 1",
+        "weight": 4,
+        "alt1": 5,
+        "alt2": 1,
+        "alt3": 3
+      },
+      {
+        "id": 1,
+        "criteria": "criterion 2",
+        "weight": 2,
+        "alt1": 1,
+        "alt2": 2,
+        "alt3": 2
+      },
+      {
+        "id": 2,
+        "criteria": "criterion 3",
+        "weight": 3,
+        "alt1": 2,
+        "alt2": 5,
+        "alt3": 1
+      },
+      {
+        "id": 1000,
+        "criteria": "weighted sum",
+        "alt1": 28,
+        "alt2": 23,
+        "alt3": 19,
+        "alt4": 0,
+        "alt5": 0
+      },
+      {
+        "id": 1001,
+        "criteria": "rank",
+        "alt1": 1,
+        "alt2": 2,
+        "alt3": 3,
+        "alt4": 4,
+        "alt5": 4
+      }
+    ]
+  }
+}
+    * */
+
+
+    //function that generates aggregation of decisionMakerData
+    // Run aggregation whenever decisionMakerData updates
+    useEffect(() => {
+        const aggPrefs = aggPreferences(decisionMakerData);
+        setAggregatedPreferences(aggPrefs);
+        console.log('Aggregated Preferences:', aggPrefs);
+    }, [decisionMakerData]);
+
+
+    interface AggregatedPreference {
+        criteria: string;
+        weights: Set<number>;
+    }
+
+    //interface row object
+    interface Row {
+        id: number;
+        criteria: string;
+        weight: number | undefined;
+
+        [p: string]: any;
+    }
+
+    const aggPreferences = (data: { [dmId: string]: any }): AggregatedPreference[] => {
+        let aggPreferences: AggregatedPreference[] = [];
+
+        // check if data isEmpty - should have 1 object containing arrays of decision maker data
+        const dmData = Object.values(data);
+        console.log('Decision Makers:', dmData);
+
+        // error handling
+        if (dmData.length === 0) {
+            return aggPreferences;
+        }
+
+        // Extract criteria keys
+        // from the first decision maker
+        const firstDM = dmData[0][1]; // first array of object
+        console.log('First DM:', firstDM);
+        /* firstDM example data:
+         [
+          {
+            "id": 0,
+            "criteria": "criterion 1",
+            "weight": 1,
+            "alt1": 2,
+            "alt2": 5,
+            "alt3": 1
+          },
+          {
+            "id": 1,
+            "criteria": "criterion 2",
+            "weight": 5,
+            "alt1": 3,
+            "alt2": 4,
+            "alt3": 2
+          },
+          {
+            "id": 2,
+            "criteria": "criterion 3",
+            "weight": 2,
+            "alt1": 4,
+            "alt2": 3,
+            "alt3": 3
+          },
+          {
+            "id": 1000,
+            "criteria": "weighted sum",
+            "alt1": 25,
+            "alt2": 31,
+            "alt3": 17,
+            "alt4": 0,
+            "alt5": 0
+          },
+          {
+            "id": 1001,
+            "criteria": "rank",
+            "alt1": 2,
+            "alt2": 1,
+            "alt3": 3,
+            "alt4": 4,
+            "alt5": 4
+          }
+        ]
+        */
+        const criteriaSet = new Set<string>(); // Set has unique values
+        firstDM.forEach((object: Row) => {
+            if (object.id !== 1000 && object.id !== 1001) {
+                criteriaSet.add(object.criteria);
+            }
+
+        })
+
+        // Initialize aggPreferences
+        criteriaSet.forEach((criterion: string) => {
+            aggPreferences.push({
+                criteria: criterion,
+                weights: new Set<number>
+            });
+        });
+
+        // For each decision maker, gather weights
+        const decisionMakers = dmData[0]; // contains an object array for each decision maker
+
+        for (const dmID of Object.keys(decisionMakers)) {
+            //const decisionMaker: Row[] = decisionMakers.x;
+            const decisionMaker = decisionMakers[dmID];
+
+            // set weight for each criterion
+
+            for (let row = 0; row < aggPreferences.length; row++) {
+                const decisionRow = decisionMaker[row];
+                if (!decisionRow) continue; // Skip if decisionRow is undefined or null
+
+                if (
+                    aggPreferences[row].criteria === decisionRow.criteria &&
+                    typeof decisionRow.weight === 'number'
+                ) {
+                    aggPreferences[row].weights.add(decisionRow.weight);
+                }
+            }
+
+        }
+
+
+        return aggPreferences;
+        /*
+         should be:
+         [
+          {
+            "criteria": "criterion 1",
+            "weights": [1,4]
+          },      {
+            "criteria": "criterion 2",
+            "weights": [5,2]
+          },
+          {
+            "criteria": "criterion 3",
+            "weights": [2,3]
+          }
+        ]
+        */
+    }
+
     // todo: aggJudgementMatrix .. Matrix for each altn an array of unique values from decisionMaker judgements for each criterion m (is the mth index of altn array)
-    // todo: aggPreferences .. for each criteria the criterion weights of every decisionMaker
 
 
-    return (<GenericHeader title={'Schritt 2: Combinatorial Acceptability Analysis'}/>)
+    return (
+        <Grid>
+            <GenericHeader title={'Schritt 2: Combinatorial Acceptability Analysis'}/>
+        </Grid>
+    )
 }
