@@ -174,7 +174,6 @@ export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps)
 
     // only initial data - without user inputs
     const [rows, setRows] = useState(() => initializeRows()); // useState to update data
-    const prevRowsRef = useRef(rows); // as safeguard from infinite loop useEffect
     const prevSumsRef = useRef<{ [key: string]: number } | null>(null); // useRef to prevent infinite loop
 
     // process user inputs and update row data
@@ -264,8 +263,8 @@ export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps)
         // Check if sums have changed to prevent unnecessary state updates
         const sumsChanged = JSON.stringify(sums) !== JSON.stringify(prevSumsRef.current);
         // additional check to rows
-        const rowsChanged = JSON.stringify(rows) !== JSON.stringify(prevRowsRef.current);
-        if (sumsChanged || rowsChanged) {
+        //const rowsChanged = JSON.stringify(rows) !== JSON.stringify(prevRowsRef.current);
+        if (sumsChanged) {
             prevSumsRef.current = sums;
             // Prepare new rows
             const newRows = [...rows];

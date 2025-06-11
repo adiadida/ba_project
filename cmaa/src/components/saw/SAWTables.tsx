@@ -1,8 +1,10 @@
+'use client'
 import Grid from "@mui/material/Grid";
 import {SAWDataGrid} from "@/components/saw/SAWDataGrid";
 import {GenericLikertCard} from "@/components/generics/GenericLikertCard";
 import {Button} from "@mui/material";
 import {useState} from "react";
+import {useRouter} from "next/navigation";
 
 export const SAWTables = ({numCols, numRows, numDM}: SWATablesProps) => {
 
@@ -12,6 +14,16 @@ export const SAWTables = ({numCols, numRows, numDM}: SWATablesProps) => {
     // Function to update data for a specific decision maker
     const handleDataChange = (dmId: string, data: any) => {
         setDecisionMakerData(prev => ({ ...prev, [dmId]: data }));
+    };
+
+    const router = useRouter();
+
+    // Navigation and data management
+    const handleButtonClick = () => {
+        // Serialize decisionMakerData to JSON string
+        const dataString = encodeURIComponent(JSON.stringify(decisionMakerData));
+        // Navigate to CMAAPage with data as query param
+        router.push(`/groupdecision/inputcaa?data=${dataString}`);
     };
 
     // Generate an array of React elements representing the tables
@@ -54,7 +66,7 @@ export const SAWTables = ({numCols, numRows, numDM}: SWATablesProps) => {
             <Grid container direction={'row'} spacing={2} alignItems={'center'} justifyContent={'flex-end'}
                   size={12}>
                 <Grid size={1}>
-                   <Button variant={'contained'}>zu Schritt 2</Button>
+                   <Button variant={'contained'} onClick={handleButtonClick}>zu Schritt 2</Button>
                 </Grid>
             </Grid>
 
