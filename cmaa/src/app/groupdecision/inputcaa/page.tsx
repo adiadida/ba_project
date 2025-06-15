@@ -9,11 +9,14 @@ import seedrandom from "seedrandom";
 export default function CAAPage() {
 
     // get data
-    const [decisionMakerData, setDecisionMakerData] = useState<{ [dmId: string]: any }>({});
+    const [decisionMakerData, setDecisionMakerData] = useState<{ [oid: string]: any }>({});
     const searchParams = useSearchParams()
 
     // State to hold aggregated preferences
     const [aggregatedPreferences, setAggregatedPreferences] = useState<Set<number>[]>([]);
+
+    // State to hold aggregated judgements
+    const [aggregatedJudgements, setAggregatedJudgements] = useState<Set<number>[][]>([]);
 
 
     // Fetch and parse data from URL params
@@ -152,9 +155,13 @@ export default function CAAPage() {
     //function that generates aggregation of decisionMakerData
     // Run aggregation whenever decisionMakerData updates
     useEffect(() => {
-        const aggPrefs = aggPreferences(decisionMakerData);
+        const aggPrefs: Set<number>[] = aggPreferences(decisionMakerData);
         setAggregatedPreferences(aggPrefs);
-        console.log('Aggregated Preferences:', aggPrefs);
+        // console.log('Aggregated Preferences:', aggPrefs);
+
+        const aggJudgs: Set<number>[][] = aggJudgements(decisionMakerData);
+        setAggregatedJudgements(aggJudgements);
+        console.log('Aggregated Judgements:', aggJudgs);
     }, [decisionMakerData]);
 
 
@@ -171,22 +178,20 @@ export default function CAAPage() {
         [p: string]: any;
     }
 
-    const aggPreferences = (data: { [dmId: string]: any }): Set<number>[] => {
+    const aggPreferences = (data: { [oid: string]: any }): Set<number>[] => {
         let aggPreferences: Set<number>[] = [];
 
-        // check if data isEmpty - should have 1 object containing arrays of decision maker data
+        // check if data isEmpty -  data is object with oid --> that object then contains object arrays of decision maker data
         const dmData = Object.values(data);
-        console.log('Decision Makers:', dmData);
 
         // error handling
         if (dmData.length === 0) {
             return aggPreferences;
         }
 
-        // Extract criteria keys
+
         // from the first decision maker
         const firstDM: Row[] = dmData[0][1]; // first array of row objects
-        console.log('First DM:', firstDM);
         /* firstDM example data:
          [
           {
@@ -233,41 +238,44 @@ export default function CAAPage() {
           }
         ]
         */
-        const criteriaSet = new Set<string>(); // Set has unique values
+        // Extract criteria keys
+        const criteriaArray : string[]=[]; // Set has unique values
         firstDM.forEach((object: Row) => {
             if (object.id !== 1000 && object.id !== 1001) {
-                criteriaSet.add(object.criteria);
+                criteriaArray.push(object.criteria);
             }
-
         })
 
         // Initialize aggPreferences
-        criteriaSet.forEach(() => {
+        criteriaArray.forEach(() => {
             aggPreferences.push(new Set<number>)
         });
 
         // For each decision maker, gather weights
         const decisionMakers = dmData[0]; // contains an object array for each decision maker
 
-        for (const dmID of Object.keys(decisionMakers)) {
-            //const decisionMaker: Row[] = decisionMakers.x;
+        for (const dmID of Object.keys(decisionMakers)) { // iterate over decision makers
             const decisionMaker = decisionMakers[dmID];
 
             // set weight for each criterion
-
-            for (let row = 0; row < aggPreferences.length; row++) {
+            for (let row = 0; row < aggPreferences.length; row++) { // iterate over rows
                 const decisionRow = decisionMaker[row];
                 if (!decisionRow) continue; // Skip if decisionRow is undefined or null
 
-                aggPreferences[row].add(decisionRow.weight);
+                if (
+                    criteriaArray[row] === decisionRow.criteria &&
+                    typeof decisionRow.weight === 'number'
+                ){
+                    // add weight to set
+                    aggPreferences[row].add(decisionRow.weight);
+                }
 
             }
-
         }
 
         return aggPreferences;
         /*
-         should be:
+         returns with example data:
          [
             0: Set [1,4] // is "criterion 1"
             1: Set [5,2] // is "criterion 2"
@@ -276,8 +284,75 @@ export default function CAAPage() {
         */
     }
 
-    // todo: aggJudgementMatrix .. Matrix for each altn an array of unique values from decisionMaker judgements for each criterion m (is the mth index of altn array)
+    // aggJudgementMatrix ... Matrix for each criterion m and for each altn a set of unique values from decisionMaker judgements
 
+    const aggJudgements = (data: { [oid: string]: any }): Set<number>[][] => {
+        // matrix or 2-dimensional array of Set<number>
+        let aggJudgements: Set<number>[][] = [];
+        // check if data isEmpty -  data is object with oid --> that object then contains object arrays of decision maker data
+        const dmData = Object.values(data);
+
+        // error handling
+        if (dmData.length === 0) {
+            return aggJudgements;
+        }
+
+        // from the first decision maker
+        const firstDM: Row[] = dmData[0][1]; // first array of row objects
+        // get criteria
+        const criteriaArray : string[]=[]; // Set has unique values
+        firstDM.forEach((object: Row) => {
+            if (object.id !== 1000 && object.id !== 1001) {
+                criteriaArray.push(object.criteria);
+            }
+        })
+        // from first row of first decision maker
+        const firstRow: Row = firstDM[0];
+        // get alternatives
+        const alternativesArray: string[]=[];
+        // Extract keys starting with 'alt'
+        Object.keys(firstRow).forEach((key) => {
+            if (key.startsWith('alt')) {
+                alternativesArray.push(key);
+            }
+        });
+
+        console.log(criteriaArray, alternativesArray);
+
+        const criteriaCount = criteriaArray.length;
+        const alternativesCount = alternativesArray.length;
+
+        // Initialize the array with empty sets
+        for (let row = 0; row < criteriaCount; row++) {
+            aggJudgements[row] = [];
+            for (let col = 0; col < alternativesCount; col++) {
+                aggJudgements[row][col] = new Set<number>();
+            }
+        }
+
+        const decisionMakers = dmData[0]; // contains an object array for each decision maker
+
+        for (const dmID of Object.keys(decisionMakers)) { // iterate over decision makers
+            const decisionMaker = decisionMakers[dmID];
+
+            // set weight for each criterion
+            for (let row = 0; row < criteriaCount; row++) { // iterate over rows = criteria
+                const decisionRow = decisionMaker[row];
+
+                for (let col = 0; col < alternativesCount; col++) { // iterate over cols = alternatives
+                    if (
+                    criteriaArray[row] === decisionRow.criteria && alternativesArray[col] !== undefined
+                ){
+                        const altkey: string = alternativesArray[col];
+                        aggJudgements[row][col].add(decisionRow[altkey])
+                    }
+                }
+
+            }
+        }
+
+        return aggJudgements;
+    }
 
     const rngRef = useRef<seedrandom.PRNG | null>(null);
 
