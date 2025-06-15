@@ -2,8 +2,9 @@
 
 import {GenericHeader} from "@/components/generics/GenericHeader";
 import {useSearchParams} from "next/navigation"; // useRouter hook should be imported from next/navigation
-import {useEffect, useState} from "react";
-import {Grid} from "@mui/material";
+import React, {useEffect, useRef, useState} from "react";
+import {Button, Grid} from "@mui/material";
+import seedrandom from "seedrandom";
 
 export default function CAAPage() {
 
@@ -295,9 +296,35 @@ export default function CAAPage() {
     // todo: aggJudgementMatrix .. Matrix for each altn an array of unique values from decisionMaker judgements for each criterion m (is the mth index of altn array)
 
 
+    const rngRef = useRef<seedrandom.PRNG | null>(null);
+
+    // Initialize the seedrandom generator once
+    const initializeGenerator = () => {
+        rngRef.current = seedrandom('1234');
+    };
+
+    // Generate a random number between 0 and 1
+    const getRandomNumber = () => {
+        if (rngRef.current) {
+            return rngRef.current();
+        }
+        return null;
+    };
+
+    React.useEffect(() => {
+        initializeGenerator();
+        console.log('Random number:', getRandomNumber());
+    }, []);
+
     return (
         <Grid>
             <GenericHeader title={'Schritt 2: Combinatorial Acceptability Analysis'}/>
+            <Grid>
+                <Button onClick={() => {
+                    initializeGenerator();
+                    alert(`New seed random number: ${getRandomNumber()}`);
+                }} variant={"contained"}>random</Button>
+            </Grid>
         </Grid>
     )
 }
