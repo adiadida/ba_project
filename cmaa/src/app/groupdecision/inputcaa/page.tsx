@@ -13,7 +13,7 @@ export default function CAAPage() {
     const searchParams = useSearchParams()
 
     // State to hold aggregated preferences
-    const [aggregatedPreferences, setAggregatedPreferences] = useState<AggregatedPreference[]>([]);
+    const [aggregatedPreferences, setAggregatedPreferences] = useState<Set<number>[]>([]);
 
 
     // Fetch and parse data from URL params
@@ -158,10 +158,9 @@ export default function CAAPage() {
     }, [decisionMakerData]);
 
 
-    interface AggregatedPreference {
-        criteria: string;
-        weights: Set<number>;
-    }
+    //interface AggregatedPreferences {
+    //    Set<number>[]
+    //}
 
     //interface row object
     interface Row {
@@ -172,8 +171,8 @@ export default function CAAPage() {
         [p: string]: any;
     }
 
-    const aggPreferences = (data: { [dmId: string]: any }): AggregatedPreference[] => {
-        let aggPreferences: AggregatedPreference[] = [];
+    const aggPreferences = (data: { [dmId: string]: any }): Set<number>[] => {
+        let aggPreferences: Set<number>[] = [];
 
         // check if data isEmpty - should have 1 object containing arrays of decision maker data
         const dmData = Object.values(data);
@@ -186,7 +185,7 @@ export default function CAAPage() {
 
         // Extract criteria keys
         // from the first decision maker
-        const firstDM = dmData[0][1]; // first array of object
+        const firstDM: Row[] = dmData[0][1]; // first array of row objects
         console.log('First DM:', firstDM);
         /* firstDM example data:
          [
@@ -243,11 +242,8 @@ export default function CAAPage() {
         })
 
         // Initialize aggPreferences
-        criteriaSet.forEach((criterion: string) => {
-            aggPreferences.push({
-                criteria: criterion,
-                weights: new Set<number>
-            });
+        criteriaSet.forEach(() => {
+            aggPreferences.push(new Set<number>)
         });
 
         // For each decision maker, gather weights
@@ -263,32 +259,19 @@ export default function CAAPage() {
                 const decisionRow = decisionMaker[row];
                 if (!decisionRow) continue; // Skip if decisionRow is undefined or null
 
-                if (
-                    aggPreferences[row].criteria === decisionRow.criteria &&
-                    typeof decisionRow.weight === 'number'
-                ) {
-                    aggPreferences[row].weights.add(decisionRow.weight);
-                }
+                aggPreferences[row].add(decisionRow.weight);
+
             }
 
         }
-
 
         return aggPreferences;
         /*
          should be:
          [
-          {
-            "criteria": "criterion 1",
-            "weights": [1,4]
-          },      {
-            "criteria": "criterion 2",
-            "weights": [5,2]
-          },
-          {
-            "criteria": "criterion 3",
-            "weights": [2,3]
-          }
+            0: Set [1,4] // is "criterion 1"
+            1: Set [5,2] // is "criterion 2"
+            2: Set [2,3] // is "criterion 2"
         ]
         */
     }
