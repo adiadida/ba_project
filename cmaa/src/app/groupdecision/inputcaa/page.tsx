@@ -1,10 +1,11 @@
-'use client'
+ 'use client'
 
 import {GenericHeader} from "@/components/generics/GenericHeader";
 import {useSearchParams} from "next/navigation"; // useRouter hook should be imported from next/navigation
 import React, {useEffect, useRef, useState} from "react";
 import {Button, Grid} from "@mui/material";
 import seedrandom from "seedrandom";
+import {testData} from "@/components/cmaa/TestData";
 
 export default function CAAPage() {
 
@@ -42,18 +43,28 @@ export default function CAAPage() {
                 const parsedData = JSON.parse(decodedString);
 
                 // Use the key as dmId, or if you expect a different structure, adjust accordingly
-                const dmId = key;
 
-                // Generate data object for this dmId
-                newData[dmId] = parsedData;
-
+                // Generate data object for this key
+                if (typeof parsedData === 'object' && parsedData !== null) {
+                    newData[key] = parsedData;
+                    console.log('new data:',newData);
+                } else {
+                    console.warn(`Parsed data for ${key} is not an object.`);
+                }
             } catch (error) {
                 console.error(`Error parsing data for ${key}:`, error);
             }
         });
 
-        console.log('Generated Data:', newData);
-        setDecisionMakerData(newData);
+        if (Object.keys(newData).length === 0) {
+            // Use testData if no URL data
+            const fallbackData = testData(); // get the 'data' object from testData
+            console.log('test Data:', fallbackData);
+            setDecisionMakerData(fallbackData);
+        } else {
+            console.log('Generated Data:', newData);
+            setDecisionMakerData(newData);
+        }
     }, [searchParams]);
 
     /* example data object:
@@ -157,7 +168,7 @@ export default function CAAPage() {
     useEffect(() => {
         const aggPrefs: Set<number>[] = aggPreferences(decisionMakerData);
         setAggregatedPreferences(aggPrefs);
-        // console.log('Aggregated Preferences:', aggPrefs);
+        console.log('Aggregated Preferences:', aggPrefs);
 
         const aggJudgs: Set<number>[][] = aggJudgements(decisionMakerData);
         setAggregatedJudgements(aggJudgements);
@@ -239,7 +250,7 @@ export default function CAAPage() {
         ]
         */
         // Extract criteria keys
-        const criteriaArray : string[]=[]; // Set has unique values
+        const criteriaArray: string[] = []; // Set has unique values
         firstDM.forEach((object: Row) => {
             if (object.id !== 1000 && object.id !== 1001) {
                 criteriaArray.push(object.criteria);
@@ -265,7 +276,7 @@ export default function CAAPage() {
                 if (
                     criteriaArray[row] === decisionRow.criteria &&
                     typeof decisionRow.weight === 'number'
-                ){
+                ) {
                     // add weight to set
                     aggPreferences[row].add(decisionRow.weight);
                 }
@@ -300,7 +311,7 @@ export default function CAAPage() {
         // from the first decision maker
         const firstDM: Row[] = dmData[0][1]; // first array of row objects
         // get criteria
-        const criteriaArray : string[]=[]; // Set has unique values
+        const criteriaArray: string[] = []; // Set has unique values
         firstDM.forEach((object: Row) => {
             if (object.id !== 1000 && object.id !== 1001) {
                 criteriaArray.push(object.criteria);
@@ -309,7 +320,7 @@ export default function CAAPage() {
         // from first row of first decision maker
         const firstRow: Row = firstDM[0];
         // get alternatives
-        const alternativesArray: string[]=[];
+        const alternativesArray: string[] = [];
         // Extract keys starting with 'alt'
         Object.keys(firstRow).forEach((key) => {
             if (key.startsWith('alt')) {
@@ -341,8 +352,8 @@ export default function CAAPage() {
 
                 for (let col = 0; col < alternativesCount; col++) { // iterate over cols = alternatives
                     if (
-                    criteriaArray[row] === decisionRow.criteria && alternativesArray[col] !== undefined
-                ){
+                        criteriaArray[row] === decisionRow.criteria && alternativesArray[col] !== undefined
+                    ) {
                         const altkey: string = alternativesArray[col];
                         aggJudgements[row][col].add(decisionRow[altkey])
                     }
