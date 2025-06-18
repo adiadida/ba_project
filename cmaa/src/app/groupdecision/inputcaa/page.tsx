@@ -6,6 +6,8 @@ import React, {useEffect, useRef, useState} from "react";
 import {Button, Grid} from "@mui/material";
 import seedrandom from "seedrandom";
 import {testData} from "@/components/cmaa/TestData";
+import {RankAcceptabilityIndices} from "@/components/cmaa/RankAcceptabilityIndices";
+
 
 export default function CAAPage() {
 
@@ -51,7 +53,7 @@ export default function CAAPage() {
                 // Generate data object for this key
                 if (typeof parsedData === 'object' && parsedData !== null) {
                     newData[key] = parsedData;
-                    console.log('new data:', newData);
+                    //console.log('new data:', newData);
                 } else {
                     console.warn(`Parsed data for ${key} is not an object.`);
                 }
@@ -63,10 +65,10 @@ export default function CAAPage() {
         if (Object.keys(newData).length === 0) {
             // Use testData if no URL data
             const fallbackData = testData(); // get the 'data' object from testData
-            console.log('test Data:', fallbackData);
+            //console.log('test Data:', fallbackData);
             setDecisionMakerData(fallbackData);
         } else {
-            console.log('Generated Data from URL:', newData);
+            //console.log('Generated Data from URL:', newData);
             setDecisionMakerData(newData);
         }
     }, [searchParams]);
@@ -83,13 +85,13 @@ export default function CAAPage() {
         setAggregatedJudgements(aggJudgs);
         console.log('Aggregated Judgements:', aggJudgs);
 
-        const initialRACounter: number [][]= initializeRankAcceptabilityMatrix(decisionMakerData);
+        const initialRACounter: number [][] = initializeRankAcceptabilityMatrix(decisionMakerData);
         setRankAcceptabilityCounter(initialRACounter);
-        console.log('Initial RAC:', initialRACounter);
+        //console.log('Initial RAC:', initialRACounter);
 
-        const initialRAIndices: number [][]= initializeRankAcceptabilityMatrix(decisionMakerData);
+        const initialRAIndices: number [][] = initializeRankAcceptabilityMatrix(decisionMakerData);
         setRankAcceptabilityIndices(initialRAIndices);
-        console.log('Initial RAI:', initialRACounter);
+        //console.log('Initial RAI:', initialRACounter);
 
     }, [decisionMakerData]);
 
@@ -330,7 +332,7 @@ export default function CAAPage() {
         alternatives.sort((a, b) => b.performance - a.performance);
 
         // Extract sorted alternative indices as ranking
-        const rankings = alternatives.map(alternative => alternative.index+1);
+        const rankings = alternatives.map(alternative => alternative.index + 1);
         //console.log('rankings ', rankings);
 
         return rankings;
@@ -394,7 +396,7 @@ export default function CAAPage() {
     };
 
     React.useEffect(() => {
-        initializeGenerator(); // CHANGE SEED HERE
+        initializeGenerator('4321'); // CHANGE SEED HERE
         //console.log('Random number:', getRandomNumber());
     }, []);
 
@@ -437,12 +439,35 @@ export default function CAAPage() {
         return {preferences, judgements};
     }
 
-    const createStatistics = () => {
-      
+    const createStatistics = (rankAcceptabilityCounter: number[][], kCM: number) => {
+        const counterMatrix = rankAcceptabilityCounter;
+        const rAIMatrix = initializeRankAcceptabilityMatrix(decisionMakerData);
+
+        // iterate over 1 col and rows + sum up number of instances
+        /*let sum = 0;
+
+        for (let j = 0; j < counterMatrix[0].length; j++) {
+            sum += counterMatrix[0][j];
+        }
+
+        console.log(`sum: ${sum}`);*/
+
+        // normalize counters with sum of instances
+        for (let i = 0; i < rAIMatrix.length; i++) {
+            for (let j = 0; j < rAIMatrix[i].length; j++) {
+                rAIMatrix[i][j] = counterMatrix[i][j] / kCM;
+                //console.log('devision ', counterMatrix[i][j] / kCM)
+            }
+        }
+
+        console.log('normalized: ', rAIMatrix)
+        setRankAcceptabilityIndices(rAIMatrix);
+
     }
 
     function cMAA() {
 
+        //error handling
         if (Object.values(decisionMakerData).length === 0) {
             return;
         }
@@ -454,7 +479,10 @@ export default function CAAPage() {
             updateCounters(instance.preferences, instance.judgements, ranks);
         }
 
-        console.log('rankAcceptabilityIndx ', rankAcceptabilityCounter)
+        createStatistics(rankAcceptabilityCounter, kMonteCarlo);
+        //console.log('rankAcceptabilityCounter ', rankAcceptabilityCounter)
+        //console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
+
     }
 
     // execute CMAA algorithm when all parameters change
@@ -471,10 +499,16 @@ export default function CAAPage() {
     }, [decisionMakerData, aggregatedPreferences, aggregatedJudgements]);
 
     return (
-        <Grid>
+        <Grid container spacing={2} size={12} alignItems={'center'}>
+
             <GenericHeader title={'Schritt 2: Combinatorial Acceptability Analysis'}/>
-            <Grid>
-            </Grid>
+
+            {rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
+                <Grid container size={8} offset={1}>
+                    <RankAcceptabilityIndices rankAccIdx={rankAcceptabilityIndices} rankAccCounter={rankAcceptabilityCounter}/>
+                </Grid>
+            )}
+
         </Grid>
     )
 }
