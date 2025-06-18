@@ -37,8 +37,8 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
     };
 
     const getSolution = () => {
-        const allValues = rankAccCounter.flat();
-        const maxValue = Math.max(...allValues);
+        //const allValues = rankAccCounter.flat();
+        //const maxValue = Math.max(...allValues);
 
         let numInstances: number = 0;
         for (let j = 0; j < rankAccCounter[0].length; j++) {// iterate over one row to sum up instances
@@ -46,18 +46,20 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
         }
 
         let altRow: number = -1;
-        let rankCol: number = -1;
+        let rankCol: number = 0;
+
+        let maxValue: number = 0;
 
         for (let i = 0; i < rankAccCounter.length; i++) {
-            for (let j = 0; j < rankAccCounter[i].length; j++) {
-                if (rankAccCounter[i][j] === maxValue ) {
-                    altRow = i;
-                    rankCol = j;
-                }
+
+            if (rankAccCounter[i][0] > maxValue) {
+
+                maxValue = rankAccCounter[i][0];
+                altRow = i;
             }
         }
 
-        return`bei ${maxValue} von ${numInstances} simulierten Instanzen erhält die Alternative ${altRow+1} den Rang ${rankCol+1}`;
+        return `Bei ${maxValue} von ${numInstances} simulierten Instanzen erhält die Alternative ${altRow + 1} den Rang ${rankCol + 1}`;
 
     }
 
@@ -106,7 +108,7 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
     }
 
     const columns: GridColDef[] = generateCols();
-    console.log(columns);
+    //console.log(columns);
 
 
     // type for properties based on variable number of ranks
@@ -119,12 +121,12 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
         id: string,
         alternatives: string,
 
-        [p: string]: any, //variable alt rows
+        [p: string]: any, //variable crit rows
     }
 
     function generateRows() {
 
-        // Generate an object with keys like 'alt1', 'alt2',
+        // Generate an object with keys like 'rank1', 'rank2',
         const rankProperties: RankProperties = [];
 
         for (let i = 0; i < rankAccIdx[0].length; i++) {
@@ -155,20 +157,20 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
 
     const rows: Row[] = generateRows();
 
-    console.log('gen rows ', rows);
+    //console.log('gen rows ', rows);
 
     return (
         <Grid container sx={{width: '90%'}} spacing={2}>
             <Grid>
                 {message}
             </Grid>
-            <Grid>
-            <DataGrid rows={rows} columns={columns}
+            <Grid sx={{marginBottom: '1em'}}>
+                <DataGrid rows={rows} columns={columns}
 
-                      autoPageSize={false}
-                      hideFooter={true}
-            />
-                </Grid>
+                          autoPageSize={false}
+                          hideFooter={true}
+                />
+            </Grid>
         </Grid>
     );
 }
