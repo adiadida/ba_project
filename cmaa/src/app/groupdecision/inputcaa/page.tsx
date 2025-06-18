@@ -7,6 +7,7 @@ import {Button, Grid} from "@mui/material";
 import seedrandom from "seedrandom";
 import {testData} from "@/components/cmaa/TestData";
 import {RankAcceptabilityIndices} from "@/components/cmaa/RankAcceptabilityIndices";
+import {AggregatedInputs} from "@/components/cmaa/AggregatedInputs";
 
 
 export default function CAAPage() {
@@ -499,16 +500,27 @@ export default function CAAPage() {
     }, [decisionMakerData, aggregatedPreferences, aggregatedJudgements]);
 
     return (
-        <Grid container spacing={2} size={12} alignItems={'center'}>
+        <Grid container spacing={2} alignItems="center">
+            <GenericHeader title="Schritt 2: Combinatorial Acceptability Analysis"/>
 
-            <GenericHeader title={'Schritt 2: Combinatorial Acceptability Analysis'}/>
+            {aggregatedJudgements && aggregatedJudgements.length > 0 && aggregatedPreferences &&
+                aggregatedPreferences.length > 0 && (
+                    <Grid container size={12} spacing={2} offset={0.2}>
+                        <AggregatedInputs
+                            aggPrefs={aggregatedPreferences}
+                            aggJudgements={aggregatedJudgements}
+                        />
+                    </Grid>
+                )}
 
             {rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
-                <Grid container size={8} offset={1}>
-                    <RankAcceptabilityIndices rankAccIdx={rankAcceptabilityIndices} rankAccCounter={rankAcceptabilityCounter}/>
+                <Grid container size={8} offset={0.2}>
+                    <RankAcceptabilityIndices
+                        rankAccIdx={rankAcceptabilityIndices}
+                        rankAccCounter={rankAcceptabilityCounter}
+                    />
                 </Grid>
             )}
-
         </Grid>
-    )
+    );
 }
