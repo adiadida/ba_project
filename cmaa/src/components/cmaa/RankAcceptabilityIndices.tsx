@@ -160,11 +160,11 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
     //console.log('gen rows ', rows);
 
     return (
-        <Grid container sx={{width: '90%'}} spacing={2}>
+        <Grid container spacing={2}>
             <Grid>
                 {message}
             </Grid>
-            <Grid sx={{marginBottom: '1em'}}>
+            <Grid sx={{marginBottom: '1em', width:`${rows.length*115}px`}}>
                 <DataGrid rows={rows} columns={columns}
 
                           autoPageSize={false}

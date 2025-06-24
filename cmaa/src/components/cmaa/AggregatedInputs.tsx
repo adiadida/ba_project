@@ -77,7 +77,7 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
                 headerName: `alternative ${i + 1}`,
             }
 
-            console.log('judge col: ', judgeCol);
+            //console.log('judge col: ', judgeCol);
             judgeCols.push(judgeCol);
         }
 
@@ -124,7 +124,7 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
 
                 const aggJudgement = Array.from(aggJudgements[i][j]);
                 aggJudgement.sort();
-                console.log('aggJudgement: ', aggJudgement);
+                //console.log('aggJudgement: ', aggJudgement);
                 const altN = alternatives[j]; // corresponding alt property
 
                 judgeRow[altN] = aggJudgement.join(' ,  ');

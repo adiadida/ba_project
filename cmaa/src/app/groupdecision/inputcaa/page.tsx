@@ -382,7 +382,7 @@ export default function CAAPage() {
     // Initialize the seedrandom generator once
     const initializeGenerator = (seed?: string) => {
         //fallback seed
-        const superSeed: string = seed ?? '1234';
+        const superSeed: string = seed ?? 'bombastic1234whydontyouworkthisisveryweirdnosenseforthesenseless';
         rngRef.current = seedrandom(superSeed);
     };
 
@@ -397,23 +397,28 @@ export default function CAAPage() {
     };
 
     React.useEffect(() => {
-        initializeGenerator('4321'); // CHANGE SEED HERE
-        //console.log('Random number:', getRandomNumber());
+        initializeGenerator(/*'4321'*/); // CHANGE SEED HERE
     }, []);
 
     const generateRandomInstance = (aggrPreferences: Set<number>[], aggrJudgements: Set<number>[][], seed?: string) => {
-        // Initialize generator if seed provided, or keep existing
+        // Initialize generator if seed provided (rng already initialized otherwise)
         if (seed) {
             initializeGenerator(seed);
         }
 
-        // generate deterministic random preferences
-        const preferences = aggrPreferences.map(() => {
-            return Math.floor(getRandomNumber() * 9) + 1; // 1 to 9 : CHANGE RANGE HERE
-        });
+        let preferences: number[] = [];
 
-        //console.log('rows number', aggrJudgements.length)
-        //console.log('cols number', aggrJudgements[1].length)
+        // initiate preference array
+        for (let i = 0; i < aggrPreferences.length; i++) {
+            preferences[i]=0;
+        }
+
+        //generate numbers from existing weights
+        for (let i = 0; i < preferences.length; i++) {
+            const cellWeights:number[] = Array.from(aggrPreferences[i]);
+            const randIdx = Math.floor(getRandomNumber() * cellWeights.length);
+            preferences[i] = cellWeights[randIdx];
+        }
 
         // initiate judgments matrix
         let judgements: number[][] = [];
@@ -428,11 +433,11 @@ export default function CAAPage() {
         for (let i = 0; i < aggrJudgements.length; i++) {
             const row = aggrJudgements[i];
             for (let j = 0; j < aggrJudgements[i].length; j++) {
-                const arr: number[] = Array.from(row[j]);
-                //console.log(arr);
+                const cellJudgements: number[] = Array.from(row[j]);
+
                 // index in range of numbers from set
-                const randIdx: number = Math.floor(getRandomNumber() * arr.length);
-                judgements[i][j] = arr[randIdx];
+                const randIdx: number = Math.floor(getRandomNumber() * cellJudgements.length);
+                judgements[i][j] = cellJudgements[randIdx];
             }
         }
 
@@ -517,6 +522,15 @@ export default function CAAPage() {
                 <Grid container size={8} offset={0.2}>
                     <RankAcceptabilityIndices
                         rankAccIdx={rankAcceptabilityIndices}
+                        rankAccCounter={rankAcceptabilityCounter}
+                    />
+                </Grid>
+            )}
+
+            {rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
+                <Grid container size={8} offset={0.2}>
+                    <RankAcceptabilityIndices
+                        rankAccIdx={rankAcceptabilityCounter}
                         rankAccCounter={rankAcceptabilityCounter}
                     />
                 </Grid>
