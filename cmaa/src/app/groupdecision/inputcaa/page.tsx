@@ -373,7 +373,8 @@ export default function CAAPage() {
 
         for (let alternative = 0; alternative < ranks.length; alternative++) {
             rank = ranks[alternative] - 1; // rank-1 is col index in rankAccs
-            rankAccs[alternative][rank] += 1;
+            // hier war der Schlawiner
+            rankAccs[rank][alternative] += 1;
         }
         setRankAcceptabilityCounter(rankAccs)
     }
