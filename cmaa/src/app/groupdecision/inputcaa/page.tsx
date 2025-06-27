@@ -27,6 +27,10 @@ export default function CAAPage() {
     // State to hold rank acceptability indices
     const [rankAcceptabilityIndices, setRankAcceptabilityIndices] = useState<number[][]>([]);
 
+    //for debugging
+    const dPrefsRef = useRef<number[][] | null>(null);
+    const dJudgesRef = useRef<number[][][] | null>(null);
+
     // Fetch and parse data from URL params
     useEffect(() => {
 
@@ -400,24 +404,60 @@ export default function CAAPage() {
         initializeGenerator(/*'4321'*/); // CHANGE SEED HERE
     }, []);
 
+    const initializeDPrefs = () => {
+        //for debugging - test uniformity
+        let dPrefs: number[][] = []
+        for (let i = 0; i < aggregatedPreferences.length; i++) {
+            // for debugging
+            const length = Array.from(aggregatedPreferences[i]).length ?? 1;
+            dPrefs[i] = [];
+            dPrefs[i] = Array(length).fill(0);
+        }
+        return dPrefs;
+    }
+
+    const initializeDJudges = () => {
+        let dJudges: number[][][] = [];
+        for (let i = 0; i < aggregatedJudgements.length; i++) {
+            dJudges[i] = [];
+            for (let j = 0; j < aggregatedJudgements[i].length; j++) {
+                dJudges[i][j] = [];
+                const length = Array.from(aggregatedJudgements[i][j]).length ?? 1;
+                dJudges[i][j] = Array(length).fill(0);
+
+            }
+        }
+        return dJudges;
+    }
+
     const generateRandomInstance = (aggrPreferences: Set<number>[], aggrJudgements: Set<number>[][], seed?: string) => {
         // Initialize generator if seed provided (rng already initialized otherwise)
         if (seed) {
             initializeGenerator(seed);
         }
 
+        //for debugging - test uniformity
+        // Use existing counters
+        const dPrefs = dPrefsRef.current!;
+        const dJudges = dJudgesRef.current!;
+
+
         let preferences: number[] = [];
 
         // initiate preference array
         for (let i = 0; i < aggrPreferences.length; i++) {
-            preferences[i]=0;
+            preferences[i] = 0;
         }
 
         //generate numbers from existing weights
         for (let i = 0; i < preferences.length; i++) {
-            const cellWeights:number[] = Array.from(aggrPreferences[i]);
+            const cellWeights: number[] = Array.from(aggrPreferences[i]);
             const randIdx = Math.floor(getRandomNumber() * cellWeights.length);
             preferences[i] = cellWeights[randIdx];
+
+            //for debugging
+            dPrefs[i][randIdx] += 1;
+
         }
 
         // initiate judgments matrix
@@ -438,8 +478,12 @@ export default function CAAPage() {
                 // index in range of numbers from set
                 const randIdx: number = Math.floor(getRandomNumber() * cellJudgements.length);
                 judgements[i][j] = cellJudgements[randIdx];
+                dJudges[i][j][randIdx] += 1;
             }
         }
+        // update counters
+        dPrefsRef.current = dPrefs;
+        dJudgesRef.current = dJudges;
 
         //console.log('random instance: ', preferences, judgements);
         return {preferences, judgements};
@@ -474,9 +518,10 @@ export default function CAAPage() {
     function cMAA() {
 
         //error handling
-        if (Object.values(decisionMakerData).length === 0) {
+        if (Object.values(decisionMakerData).length === 0 || aggregatedJudgements.length === 0 || aggregatedPreferences.length === 0) {
             return;
         }
+
 
         const kMonteCarlo = 10000;
         for (let k = 0; k < kMonteCarlo; k++) {
@@ -485,13 +530,17 @@ export default function CAAPage() {
             updateCounters(instance.preferences, instance.judgements, ranks);
         }
 
+        // for debugging
+        console.log('d prefs ', dPrefsRef.current);
+        console.log('d judges', dJudgesRef.current);
+
         createStatistics(rankAcceptabilityCounter, kMonteCarlo);
         //console.log('rankAcceptabilityCounter ', rankAcceptabilityCounter)
         //console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
 
     }
 
-    // execute CMAA algorithm when all parameters change
+// execute CMAA algorithm when all parameters change
     useEffect(() => {
         //console.log('cMAA');
         if ( // check if necessary data defined
@@ -499,6 +548,10 @@ export default function CAAPage() {
             aggregatedPreferences !== undefined &&
             aggregatedJudgements !== undefined && aggregatedJudgements[0] !== undefined
         ) {
+            //debugging
+            dPrefsRef.current = initializeDPrefs();
+            dJudgesRef.current = initializeDJudges();
+
             //console.log('cMAA iteration');
             cMAA();
         }
@@ -527,14 +580,14 @@ export default function CAAPage() {
                 </Grid>
             )}
 
-            {rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
+            {/*{rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
                 <Grid container size={8} offset={0.2}>
                     <RankAcceptabilityIndices
                         rankAccIdx={rankAcceptabilityCounter}
                         rankAccCounter={rankAcceptabilityCounter}
                     />
                 </Grid>
-            )}
+            )}*/}
         </Grid>
     );
 }
