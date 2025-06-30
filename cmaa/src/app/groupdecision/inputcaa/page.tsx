@@ -27,6 +27,21 @@ export default function CAAPage() {
     // State to hold rank acceptability indices
     const [rankAcceptabilityIndices, setRankAcceptabilityIndices] = useState<number[][]>([]);
 
+    // state for preference multimatrix
+    const [preferencesMultiInputs, setPreferencesMultiInputs] = useState<number[][]>([]);
+
+    // Ref for counter multimatrix - [a_i gewinne] [kriterienindex] [bewertungsindex]
+    // preferenceCircumstanceCounter
+    const preferencesCircumstanceCounterRef =  useRef<number[][][] | null>(null);
+
+    // state for judgement multimatrix
+    const [judgementsMultiInputs, setJudgementsMultiInputs] = useState<number[][][]>([]);
+
+    // Ref for counter multimatrix - [a_i gewinne] [kriterienindex] [alternativenindex] [bewertungsindex]
+    // judgementCircumstanceCounter
+    const judgementsCircumstanceCounterRef = useRef<number[][][][] | null>(null);
+
+
     //for debugging
     const dPrefsRef = useRef<number[][] | null>(null);
     const dJudgesRef = useRef<number[][][] | null>(null);
@@ -79,7 +94,7 @@ export default function CAAPage() {
     }, [searchParams]);
 
 
-    //function that generates aggregations of decisionMakerData
+    // function that generates aggregations of decisionMakerData
     // Run aggregation whenever decisionMakerData updates
     useEffect(() => {
         const aggPrefs: Set<number>[] = aggPreferences(decisionMakerData);
@@ -101,7 +116,7 @@ export default function CAAPage() {
     }, [decisionMakerData]);
 
 
-    //interface row object
+    // interface row object
     interface Row {
         id: number;
         criteria: string;
@@ -123,52 +138,7 @@ export default function CAAPage() {
 
         // from the first decision maker
         const firstDM: Row[] = dmData[0][1]; // first array of row objects
-        /* firstDM example data:
-         [
-          {
-            "id": 0,
-            "criteria": "criterion 1",
-            "weight": 1,
-            "alt1": 2,
-            "alt2": 5,
-            "alt3": 1
-          },
-          {
-            "id": 1,
-            "criteria": "criterion 2",
-            "weight": 5,
-            "alt1": 3,
-            "alt2": 4,
-            "alt3": 2
-          },
-          {
-            "id": 2,
-            "criteria": "criterion 3",
-            "weight": 2,
-            "alt1": 4,
-            "alt2": 3,
-            "alt3": 3
-          },
-          {
-            "id": 1000,
-            "criteria": "weighted sum",
-            "alt1": 25,
-            "alt2": 31,
-            "alt3": 17,
-            "alt4": 0,
-            "alt5": 0
-          },
-          {
-            "id": 1001,
-            "criteria": "rank",
-            "alt1": 2,
-            "alt2": 1,
-            "alt3": 3,
-            "alt4": 4,
-            "alt5": 4
-          }
-        ]
-        */
+
         // Extract criteria keys
         const criteriaArray: string[] = []; // Set has unique values
         firstDM.forEach((object: Row) => {
@@ -285,6 +255,82 @@ export default function CAAPage() {
         return aggJudgements;
     }
 
+    // for statistics
+    const initializePreferencesMulti = () => {
+
+        let preferencesInputs: number[][] = [];
+
+        for (let crit = 0; crit < aggregatedPreferences.length; crit++) {
+            const prefs = Array.from(aggregatedPreferences[crit]).sort(); // convert Set into sorted array
+            preferencesInputs[crit] = [];
+            preferencesInputs[crit] = prefs;
+        }
+
+        let prefCircCounter: number[][][] = [];
+
+        const numAlts = aggregatedJudgements[0].length;
+
+        for (let altWinner = 0; altWinner < numAlts; altWinner++) { // [a_i gewinne]
+
+            prefCircCounter[altWinner] = []
+
+            for (let crit = 0; crit < aggregatedPreferences.length; crit++) { // [kriterienindex]
+                prefCircCounter[altWinner][crit] = [];
+
+                const numPrefs = Array.from(aggregatedPreferences[crit]).length ?? 1;
+                for (let prefIdx = 0; prefIdx < numPrefs; prefIdx++) { // [bewertungsindex]
+                    prefCircCounter[altWinner][crit][prefIdx] = 0;
+                }
+            }
+        }
+
+        return {preferencesInputs, prefCircCounter};
+    }
+
+    const initializeJudgementsMulti = () => {
+        let judgementsInputs: number[][][] = [];
+
+        //console.log('len idx 1 - num Crit',aggregatedJudgements.length);
+        //console.log('len idx 2 - num Alts',aggregatedJudgements[0].length);
+        for (let crit = 0; crit < aggregatedJudgements.length; crit++) {
+            judgementsInputs[crit] = [];
+            for (let alt = 0; alt < aggregatedJudgements[crit].length; alt++) {
+                judgementsInputs[crit][alt] = [];
+
+                const judgs = Array.from(aggregatedJudgements[crit][alt]).sort(); // convert set into sorted array
+                judgementsInputs[crit][alt] = judgs;
+
+            }
+        }
+
+        let judgCircCounter: number[][][][] = [];
+
+        const numAlts = aggregatedJudgements[0].length;
+        const numCrits = aggregatedJudgements.length;
+
+        for (let altWinner = 0; altWinner < numAlts; altWinner++) { // [a_i gewinne]
+            judgCircCounter[altWinner] = [];
+
+            for (let crit = 0; crit < numCrits; crit++) { // [kriterienindex]
+                judgCircCounter[altWinner][crit] = [];
+
+                for (let alt = 0; alt < numAlts; alt++) { // [alternativenindex]
+                    judgCircCounter[altWinner][crit][alt] = [];
+
+                    const numJudgements=aggregatedJudgements[crit][alt].size;
+                    for (let judgeIdx = 0; judgeIdx < numJudgements; judgeIdx++) { // [bewertungsindex]
+                        judgCircCounter[altWinner][crit][alt][judgeIdx] = 0;
+                    }
+
+                }
+            }
+        }
+
+        return {judgementsInputs, judgCircCounter};
+
+    }
+
+
     const initializeRankAcceptabilityMatrix = (data: { [oid: string]: any }): number[][] => {
         // rows are implicitly a1...ai alternatives and cols are implicitly r1 ... rj ranks
         let rankAcceptabilityMatrix: number[][] = [];
@@ -365,6 +411,7 @@ export default function CAAPage() {
 
         return performances;
     }
+
     const updateCounters = (preferences: number[], judgements: number[][], ranks: number[]) => {
         const rankAccs: number[][] = rankAcceptabilityCounter;
         //console.log('rankAccs', rankAccs);
@@ -405,31 +452,7 @@ export default function CAAPage() {
         initializeGenerator(/*'4321'*/); // CHANGE SEED HERE
     }, []);
 
-    const initializeDPrefs = () => {
-        //for debugging - test uniformity
-        let dPrefs: number[][] = []
-        for (let i = 0; i < aggregatedPreferences.length; i++) {
-            // for debugging
-            const length = Array.from(aggregatedPreferences[i]).length ?? 1;
-            dPrefs[i] = [];
-            dPrefs[i] = Array(length).fill(0);
-        }
-        return dPrefs;
-    }
 
-    const initializeDJudges = () => {
-        let dJudges: number[][][] = [];
-        for (let i = 0; i < aggregatedJudgements.length; i++) {
-            dJudges[i] = [];
-            for (let j = 0; j < aggregatedJudgements[i].length; j++) {
-                dJudges[i][j] = [];
-                const length = Array.from(aggregatedJudgements[i][j]).length ?? 1;
-                dJudges[i][j] = Array(length).fill(0);
-
-            }
-        }
-        return dJudges;
-    }
 
     const generateRandomInstance = (aggrPreferences: Set<number>[], aggrJudgements: Set<number>[][], seed?: string) => {
         // Initialize generator if seed provided (rng already initialized otherwise)
@@ -437,11 +460,10 @@ export default function CAAPage() {
             initializeGenerator(seed);
         }
 
-        //for debugging - test uniformity
+        // for debugging - test uniformity
         // Use existing counters
         const dPrefs = dPrefsRef.current!;
         const dJudges = dJudgesRef.current!;
-
 
         let preferences: number[] = [];
 
@@ -511,7 +533,7 @@ export default function CAAPage() {
             }
         }
 
-        console.log('normalized: ', rAIMatrix)
+        //console.log('normalized: ', rAIMatrix)
         setRankAcceptabilityIndices(rAIMatrix);
 
     }
@@ -522,7 +544,6 @@ export default function CAAPage() {
         if (Object.values(decisionMakerData).length === 0 || aggregatedJudgements.length === 0 || aggregatedPreferences.length === 0) {
             return;
         }
-
 
         const kMonteCarlo = 10000;
         for (let k = 0; k < kMonteCarlo; k++) {
@@ -538,22 +559,59 @@ export default function CAAPage() {
         createStatistics(rankAcceptabilityCounter, kMonteCarlo);
         //console.log('rankAcceptabilityCounter ', rankAcceptabilityCounter)
         //console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
-
     }
 
-// execute CMAA algorithm when all parameters change
+    // for debuging purposes
+        const initializeDPrefs = () => {
+        //for debugging - test uniformity
+        let dPrefs: number[][] = []
+        for (let i = 0; i < aggregatedPreferences.length; i++) {
+            // for debugging
+            const length = Array.from(aggregatedPreferences[i]).length ?? 1;
+            dPrefs[i] = [];
+            dPrefs[i] = Array(length).fill(0);
+        }
+        return dPrefs;
+    }
+
+    const initializeDJudges = () => {
+        let dJudges: number[][][] = [];
+        for (let i = 0; i < aggregatedJudgements.length; i++) {
+            dJudges[i] = [];
+            for (let j = 0; j < aggregatedJudgements[i].length; j++) {
+                dJudges[i][j] = [];
+                const length = Array.from(aggregatedJudgements[i][j]).length ?? 1;
+                dJudges[i][j] = Array(length).fill(0);
+
+            }
+        }
+        return dJudges;
+    }
+
+// execute CMAA algorithm when all input parameters change
     useEffect(() => {
-        //console.log('cMAA');
         if ( // check if necessary data defined
             Object.keys(decisionMakerData) !== undefined &&
             aggregatedPreferences !== undefined &&
             aggregatedJudgements !== undefined && aggregatedJudgements[0] !== undefined
         ) {
+            // counters to get conditions for rank 1 instance
+            const prefInst = initializePreferencesMulti();
+            setPreferencesMultiInputs(prefInst.preferencesInputs);
+            preferencesCircumstanceCounterRef.current = prefInst.prefCircCounter;
+            console.log('aggregated prefs in Multimatrix form', prefInst.preferencesInputs);
+            console.log('initial prefs counter in Multimatrix form', prefInst.prefCircCounter);
+
+            const judgInst = initializeJudgementsMulti();
+            setJudgementsMultiInputs(judgInst.judgementsInputs);
+            judgementsCircumstanceCounterRef.current = judgInst.judgCircCounter;
+            console.log('aggregated judg in Multimatrix form', judgInst.judgementsInputs);
+            console.log('initial judg counter in Multimatrix form', judgInst.judgCircCounter);
+
             //debugging
             dPrefsRef.current = initializeDPrefs();
             dJudgesRef.current = initializeDJudges();
 
-            //console.log('cMAA iteration');
             cMAA();
         }
     }, [decisionMakerData, aggregatedPreferences, aggregatedJudgements]);
