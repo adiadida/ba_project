@@ -32,7 +32,7 @@ export default function CAAPage() {
 
     // Ref for counter multimatrix - [a_i gewinne] [kriterienindex] [bewertungsindex]
     // preferenceCircumstanceCounter
-    const preferencesCircumstanceCounterRef =  useRef<number[][][] | null>(null);
+    const preferencesCircumstanceCounterRef = useRef<number[][][] | null>(null);
 
     // state for judgement multimatrix
     const [judgementsMultiInputs, setJudgementsMultiInputs] = useState<number[][][]>([]);
@@ -114,6 +114,31 @@ export default function CAAPage() {
         //console.log('Initial RAI:', initialRACounter);
 
     }, [decisionMakerData]);
+
+
+    useEffect(() => {
+
+        if (aggregatedPreferences !== undefined
+            && aggregatedPreferences.length > 0
+            && aggregatedJudgements !== undefined
+            && aggregatedJudgements[0] !== undefined
+            && aggregatedJudgements.length > 0
+        ) {
+
+            // counters to get conditions for rank 1 from instances
+            const prefInst = initializePreferencesMulti();
+            setPreferencesMultiInputs(prefInst.preferencesInputs);
+            preferencesCircumstanceCounterRef.current = prefInst.prefCircCounter;
+            console.log('aggregated prefs in Multimatrix form', prefInst.preferencesInputs);
+            console.log('initial prefs counter in Multimatrix form', prefInst.prefCircCounter);
+
+            const judgInst = initializeJudgementsMulti();
+            setJudgementsMultiInputs(judgInst.judgementsInputs);
+            judgementsCircumstanceCounterRef.current = judgInst.judgCircCounter;
+            console.log('aggregated judg in Multimatrix form', judgInst.judgementsInputs);
+            console.log('initial judg counter in Multimatrix form', judgInst.judgCircCounter);
+        }
+    }, [aggregatedPreferences, aggregatedJudgements])
 
 
     // interface row object
@@ -260,10 +285,16 @@ export default function CAAPage() {
 
         let preferencesInputs: number[][] = [];
 
+        //console.log('len idx 1 - num Crit',aggregatedJudgements.length);
+        //console.log('len idx 2 - num Alts',aggregatedJudgements[0].length);
         for (let crit = 0; crit < aggregatedPreferences.length; crit++) {
             const prefs = Array.from(aggregatedPreferences[crit]).sort(); // convert Set into sorted array
             preferencesInputs[crit] = [];
-            preferencesInputs[crit] = prefs;
+
+            for (let prefIdx = 0; prefIdx < prefs.length; prefIdx++) {
+                preferencesInputs[crit][prefIdx] = prefs[prefIdx];
+            }
+            //preferencesInputs[crit] = prefs;
         }
 
         let prefCircCounter: number[][][] = [];
@@ -317,7 +348,7 @@ export default function CAAPage() {
                 for (let alt = 0; alt < numAlts; alt++) { // [alternativenindex]
                     judgCircCounter[altWinner][crit][alt] = [];
 
-                    const numJudgements=aggregatedJudgements[crit][alt].size;
+                    const numJudgements = aggregatedJudgements[crit][alt].size;
                     for (let judgeIdx = 0; judgeIdx < numJudgements; judgeIdx++) { // [bewertungsindex]
                         judgCircCounter[altWinner][crit][alt][judgeIdx] = 0;
                     }
@@ -414,16 +445,65 @@ export default function CAAPage() {
 
     const updateCounters = (preferences: number[], judgements: number[][], ranks: number[]) => {
         const rankAccs: number[][] = rankAcceptabilityCounter;
-        //console.log('rankAccs', rankAccs);
 
-        let rank: number = 0;
+        let alternative: number = 0;
 
-        for (let alternative = 0; alternative < ranks.length; alternative++) {
-            rank = ranks[alternative] - 1; // rank-1 is col index in rankAccs
+        // rank is array where index is implicitly the rank, the altenative is in ranks[idx]
+        for (let rank = 0; rank < ranks.length; rank++) {
+            alternative = ranks[rank] - 1; // alternative at rank -1 is row index in rankAccs
             // hier war der Schlawiner
-            rankAccs[rank][alternative] += 1;
+            rankAccs[alternative][rank] += 1;
         }
         setRankAcceptabilityCounter(rankAccs)
+
+        // rank 1 is at index 0 --> altWinner+1 is in ranks[0] --> that is the winner of instance
+        const altWinner = ranks[0]-1; // altWinner is correctly initialised with the index of the winner alternative
+
+        const prefCircCounter = preferencesCircumstanceCounterRef.current;
+        const judgCircCounter = judgementsCircumstanceCounterRef.current;
+
+        //error handling
+        if (prefCircCounter === null || judgCircCounter === null) {
+            console.log('Counters not initialized');
+            return;
+        }
+
+        // [alternative][rank] - rac
+        // [row/crit] [col/alternative]
+        // update counter for preference of winner from simulated instance
+        for (let crit = 0; crit < prefCircCounter[altWinner].length; crit++) { // [kriterienindex]
+            //prefCircCounter[altWinner][crit];
+
+            for (let prefIdx = 0; prefIdx < prefCircCounter[altWinner][crit].length; prefIdx++) { // [bewertungsindex]
+                //prefCircCounter[altWinner][crit][prefIdx];
+                if (preferences[crit] === preferencesMultiInputs[crit][prefIdx]) {
+                    prefCircCounter[altWinner][crit][prefIdx] += 1;
+                }
+            }
+        }
+
+        //set counter
+        preferencesCircumstanceCounterRef.current = prefCircCounter;
+
+        //update counter for judgements of winner from simulated instance
+        for (let crit = 0; crit < judgCircCounter[altWinner].length; crit++) { // [kriterienindex]
+            //judgCircCounter[altWinner][crit];
+
+            for (let alt = 0; alt < judgCircCounter[altWinner][crit].length; alt++) { // [alternativenindex]
+                //judgCircCounter[altWinner][crit][alternative];
+
+                for (let judgeIdx = 0; judgeIdx < judgCircCounter[altWinner][crit][alt].length; judgeIdx++) { // [bewertungsindex]
+                    //judgCircCounter[altWinner][crit][alternative][judgeIdx];
+                    if (judgements[crit][alt] === judgementsMultiInputs[crit][alt][judgeIdx]) {
+                        judgCircCounter[altWinner][crit][alt][judgeIdx] += 1;
+                    }
+                }
+
+            }
+        }
+
+        // set counter
+        judgementsCircumstanceCounterRef.current = judgCircCounter;
     }
 
     // use randomNumberGenerator with uniform chance for Monte Carlo simulations
@@ -453,7 +533,6 @@ export default function CAAPage() {
     }, []);
 
 
-
     const generateRandomInstance = (aggrPreferences: Set<number>[], aggrJudgements: Set<number>[][], seed?: string) => {
         // Initialize generator if seed provided (rng already initialized otherwise)
         if (seed) {
@@ -462,8 +541,8 @@ export default function CAAPage() {
 
         // for debugging - test uniformity
         // Use existing counters
-        const dPrefs = dPrefsRef.current!;
-        const dJudges = dJudgesRef.current!;
+        //const dPrefs = dPrefsRef.current!;
+        //const dJudges = dJudgesRef.current!;
 
         let preferences: number[] = [];
 
@@ -479,7 +558,7 @@ export default function CAAPage() {
             preferences[i] = cellWeights[randIdx];
 
             //for debugging
-            dPrefs[i][randIdx] += 1;
+            //dPrefs[i][randIdx] += 1;
 
         }
 
@@ -493,20 +572,20 @@ export default function CAAPage() {
         }
 
         // generate values from existing sets
-        for (let i = 0; i < aggrJudgements.length; i++) {
+        for (let i = 0; i < aggrJudgements.length; i++) { // iterate over criteria
             const row = aggrJudgements[i];
-            for (let j = 0; j < aggrJudgements[i].length; j++) {
+            for (let j = 0; j < aggrJudgements[i].length; j++) { // iterate over alternatives
                 const cellJudgements: number[] = Array.from(row[j]);
 
                 // index in range of numbers from set
                 const randIdx: number = Math.floor(getRandomNumber() * cellJudgements.length);
                 judgements[i][j] = cellJudgements[randIdx];
-                dJudges[i][j][randIdx] += 1;
+                //dJudges[i][j][randIdx] += 1;
             }
         }
-        // update counters
-        dPrefsRef.current = dPrefs;
-        dJudgesRef.current = dJudges;
+        // update debugging counters
+        //dPrefsRef.current = dPrefs;
+        //dJudgesRef.current = dJudges;
 
         //console.log('random instance: ', preferences, judgements);
         return {preferences, judgements};
@@ -553,16 +632,16 @@ export default function CAAPage() {
         }
 
         // for debugging
-        console.log('d prefs ', dPrefsRef.current);
-        console.log('d judges', dJudgesRef.current);
+        //console.log('d prefs ', dPrefsRef.current);
+        //console.log('d judges', dJudgesRef.current);
 
         createStatistics(rankAcceptabilityCounter, kMonteCarlo);
         //console.log('rankAcceptabilityCounter ', rankAcceptabilityCounter)
         //console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
     }
 
-    // for debuging purposes
-        const initializeDPrefs = () => {
+    // for debugging purposes
+    const initializeDPrefs = () => {
         //for debugging - test uniformity
         let dPrefs: number[][] = []
         for (let i = 0; i < aggregatedPreferences.length; i++) {
@@ -588,33 +667,186 @@ export default function CAAPage() {
         return dJudges;
     }
 
-// execute CMAA algorithm when all input parameters change
+// execute CMAA algorithm when all input parameters are properly set
     useEffect(() => {
         if ( // check if necessary data defined
             Object.keys(decisionMakerData) !== undefined &&
             aggregatedPreferences !== undefined &&
-            aggregatedJudgements !== undefined && aggregatedJudgements[0] !== undefined
-        ) {
-            // counters to get conditions for rank 1 instance
-            const prefInst = initializePreferencesMulti();
-            setPreferencesMultiInputs(prefInst.preferencesInputs);
-            preferencesCircumstanceCounterRef.current = prefInst.prefCircCounter;
-            console.log('aggregated prefs in Multimatrix form', prefInst.preferencesInputs);
-            console.log('initial prefs counter in Multimatrix form', prefInst.prefCircCounter);
+            aggregatedJudgements !== undefined &&
+            aggregatedJudgements[0] !== undefined &&
+            preferencesMultiInputs !== undefined &&
+            judgementsMultiInputs !== undefined &&
+            preferencesMultiInputs[0] !== undefined &&
+            judgementsMultiInputs[0] !== undefined
+            && preferencesMultiInputs.length > 0
+            && judgementsMultiInputs.length > 0
 
-            const judgInst = initializeJudgementsMulti();
-            setJudgementsMultiInputs(judgInst.judgementsInputs);
-            judgementsCircumstanceCounterRef.current = judgInst.judgCircCounter;
-            console.log('aggregated judg in Multimatrix form', judgInst.judgementsInputs);
-            console.log('initial judg counter in Multimatrix form', judgInst.judgCircCounter);
+        ) {
 
             //debugging
-            dPrefsRef.current = initializeDPrefs();
-            dJudgesRef.current = initializeDJudges();
+            //dPrefsRef.current = initializeDPrefs();
+            //dJudgesRef.current = initializeDJudges();
 
-            cMAA();
+            cMAA()
+            console.log('judg count', judgementsCircumstanceCounterRef.current);
+            console.log('pref count',preferencesCircumstanceCounterRef.current);
         }
-    }, [decisionMakerData, aggregatedPreferences, aggregatedJudgements]);
+    }, [decisionMakerData, aggregatedPreferences, aggregatedJudgements, preferencesMultiInputs, judgementsMultiInputs]);
+
+
+    // unit testing
+    // 1. each sum of row of judgements from alternatives = r1 of that altWinner
+    // 2. each sum of row of preferences from criteria = r1 of that altWinner
+    // 3. rai: sum of sums of rows = sum of sums of cols = number of alternatives
+
+    // check if in range
+    const between = (x:number, min: number, max: number) => {
+            return x >= min && x <= max;
+        };
+
+    function checkJudgements() {
+
+        let checkSum = 0;
+
+        let judgCounterSum = 0;
+
+        const judgCircCounter = judgementsCircumstanceCounterRef.current!; // ! for error handling
+
+        //error handling
+        if (judgCircCounter === null) {
+            return;
+        }
+
+        for (let altWinner = 0; altWinner < judgCircCounter.length; altWinner++) { // [a_i gewinne]
+            //judgCircCounter[altWinner]
+
+            checkSum = rankAcceptabilityCounter[altWinner][0]; // rank 1 is in first col
+
+            for (let crit = 0; crit < judgCircCounter[altWinner].length; crit++) { // [kriterienindex]
+                //judgCircCounter[altWinner][crit]
+
+                for (let alt = 0; alt < judgCircCounter[altWinner][crit].length; alt++) { // [alternativenindex]
+                    //judgCircCounter[altWinner][crit][alt]
+                    judgCounterSum = 0;
+
+                    for (let judgeIdx = 0; judgeIdx < judgCircCounter[altWinner][crit][alt].length; judgeIdx++) { // [bewertungsindex]
+                        //judgCircCounter[altWinner][crit][alt][judgeIdx]
+                        judgCounterSum += judgCircCounter[altWinner][crit][alt][judgeIdx];
+                    }
+
+                    if (checkSum !== judgCounterSum) {
+                        console.log('Judgement Counter Check failed');
+                        console.log('check sum ',checkSum, ' judg sum ',judgCounterSum);
+                    }
+
+                }
+            }
+        }
+
+    }
+
+    function checkPreferences() {
+
+        const errorMargin = 0.01;
+
+        let checkSum = 0;
+        let prefCounterSum = 0;
+
+        const prefCircCounter = preferencesCircumstanceCounterRef.current!; // ! for error handling
+
+        //error handling
+        if (prefCircCounter === null) {
+            return;
+        }
+
+        for (let altWinner = 0; altWinner < prefCircCounter.length; altWinner++) { // [a_i gewinne]
+            //prefCircCounter[altWinner]
+                        // [row/alts] col[ranks]
+            checkSum = rankAcceptabilityCounter[altWinner][0]; // rank 1 is in first col
+
+            for (let crit = 0; crit < prefCircCounter[altWinner].length; crit++) { // [kriterienindex]
+                //prefCircCounter[altWinner][crit]
+                prefCounterSum = 0;
+
+                for (let prefIdx = 0; prefIdx < prefCircCounter[altWinner][crit].length; prefIdx++) { // [bewertungsindex]
+                    // prefCircCounter[altWinner][crit][prefIdx]
+                    prefCounterSum += prefCircCounter[altWinner][crit][prefIdx];
+                }
+
+                if (!between(prefCounterSum, checkSum-errorMargin, checkSum+errorMargin)) {
+                    console.log('Preference Counter Check failed');
+                    console.log('check sum ',checkSum, ' prefCounte sum ',prefCounterSum);
+                }
+            }
+        }
+    }
+
+    function checkRAI() {
+
+        const numAlts = rankAcceptabilityIndices.length;
+
+        const errorMargin = 0.01;
+        const negMarginNumAlts = numAlts - errorMargin;
+        const posMarginNumAlts = numAlts + errorMargin;
+
+        let ranksSum = 0;
+        let altsSum = 0;
+
+        for (let alt = 0; alt < numAlts; alt++) {
+
+            let altSum = 0;
+            for (let rank = 0; rank < numAlts; rank++) {
+                altSum += rankAcceptabilityIndices[alt][rank];
+                altsSum += rankAcceptabilityIndices[alt][rank];
+            }
+            if (!between (altSum, 1-errorMargin, 1+errorMargin) && altSum !== 0 ){
+                console.log('RAI check failed');
+                console.log('alternative sum ', altSum)
+            }
+        }
+
+        for (let rank = 0; rank < numAlts; rank++) {
+
+            for (let alt = 0; alt < numAlts; alt++) {
+                ranksSum += rankAcceptabilityIndices[alt][rank];
+            }
+        }
+
+        // error handling: case of only initialized matrix
+        if (altsSum === 0 && ranksSum === 0) {
+            return;
+        }
+
+
+
+        if (!between(altsSum, negMarginNumAlts, posMarginNumAlts) || !between(ranksSum, negMarginNumAlts, posMarginNumAlts)) {
+            console.log('RAI check failed');
+            console.log(numAlts, altsSum, ranksSum);
+        }
+
+    }
+
+
+    // unit testing
+    useEffect(() => {
+
+        //error handling
+        if (
+            preferencesMultiInputs.length > 0
+            && judgementsMultiInputs.length > 0
+            && rankAcceptabilityCounter.length > 0
+            && rankAcceptabilityIndices.length > 0
+            && preferencesCircumstanceCounterRef.current!.length > 0
+            && judgementsCircumstanceCounterRef.current!.length > 0
+
+        ) {
+
+            checkJudgements();
+            checkPreferences();
+            checkRAI();
+        }
+
+    }, [rankAcceptabilityCounter, preferencesCircumstanceCounterRef.current, judgementsCircumstanceCounterRef.current, rankAcceptabilityIndices])
 
     return (
         <Grid container spacing={2} alignItems="center">
@@ -639,14 +871,14 @@ export default function CAAPage() {
                 </Grid>
             )}
 
-            {/*{rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
+            {rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
                 <Grid container size={8} offset={0.2}>
                     <RankAcceptabilityIndices
                         rankAccIdx={rankAcceptabilityCounter}
                         rankAccCounter={rankAcceptabilityCounter}
                     />
                 </Grid>
-            )}*/}
+            )}
         </Grid>
     );
 }
