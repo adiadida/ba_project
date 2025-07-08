@@ -7,6 +7,6 @@ export const PreferenceAcceptabilityDataGrid = ({isCurrent, altWinner, preferenc
 export type PreferenceAcceptabilityProps ={
     isCurrent: boolean,
     altWinner: number;
-    preferenceAcceptability: number[][];
+    preferenceAcceptability: number[][]; // array at idx of altWinner
     preferenceMultiInputs: number[][];
 }

@@ -12,7 +12,7 @@ export const PreferenceAcceptabilitiesAndEntropy = ({
     // state management
     const [currentPrefAcceptability, setCurrentPrefAcceptability] = useState<number[][][]>([]);
     const [potentialPrefAcceptability, setPotentialPrefAcceptability] = useState<number[][][]>([]);
-    const [preferenceEntropy, setPreferenceEntropy] = useState<number[][]>([]);
+    const [potentialPreferenceEntropy, setPotentialPreferenceEntropy] = useState<number[][]>([]);
 
     const initializePrefAcceptability = () => {
 
@@ -161,7 +161,7 @@ export const PreferenceAcceptabilitiesAndEntropy = ({
                 //console.log('potential', potPrefAcc)
                 setPotentialPrefAcceptability(potPrefAcc);
                 const prefEntropy = computePreferenceEntropy(potPrefAcc);
-                setPreferenceEntropy(prefEntropy);
+                setPotentialPreferenceEntropy(prefEntropy);
                 //console.log('pot pref entr: ', prefEntropy);
             }
 
@@ -245,7 +245,7 @@ export const PreferenceAcceptabilitiesAndEntropy = ({
         </Grid>
         <Grid container spacing={2} size={6}>
             <PotentialPreferenceEntropyDataGrid prefsMultiInputs={prefsMultiInputs}
-                                                potPrefsEntropy={preferenceEntropy}/>
+                                                potPrefsEntropy={potentialPreferenceEntropy}/>
         </Grid>
     </Grid>)
 }
