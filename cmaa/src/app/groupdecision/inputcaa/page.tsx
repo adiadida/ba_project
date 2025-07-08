@@ -9,6 +9,7 @@ import {testData} from "@/components/cmaa/TestData";
 import {RankAcceptabilityIndices} from "@/components/cmaa/RankAcceptabilityIndices";
 import {AggregatedInputs} from "@/components/cmaa/AggregatedInputs";
 import {PreferenceStatistics} from "@/components/cmaa/PreferenceStatistics";
+import {JudgementStatistics} from "@/components/cmaa/JudgementStatistics";
 
 
 export default function CAAPage() {
@@ -882,6 +883,17 @@ export default function CAAPage() {
                         <PreferenceStatistics rankAcceptabilityCounter={rankAcceptabilityCounter}
                                               prefCircumstanceCounter={preferencesCircumstanceCounterRef.current!}
                                               prefsMultiInputs={preferencesMultiInputs}/>
+                    </Grid>
+                )}
+
+            {rankAcceptabilityCounter && rankAcceptabilityCounter.length > 0 &&
+                judgementsCircumstanceCounterRef.current &&
+                judgementsCircumstanceCounterRef.current.length > 0 &&
+                judgementsMultiInputs.length > 0 &&
+                (<Grid container size={12} offset={0.1}>
+                        <JudgementStatistics rankAcceptabilityCounter={rankAcceptabilityCounter}
+                                              judgCircumstanceCounter={judgementsCircumstanceCounterRef.current!}
+                                              judgMultiInputs={judgementsMultiInputs}/>
                     </Grid>
                 )}
         </Grid>
