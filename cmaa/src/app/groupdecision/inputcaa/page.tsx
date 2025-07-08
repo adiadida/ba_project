@@ -8,6 +8,7 @@ import seedrandom from "seedrandom";
 import {testData} from "@/components/cmaa/TestData";
 import {RankAcceptabilityIndices} from "@/components/cmaa/RankAcceptabilityIndices";
 import {AggregatedInputs} from "@/components/cmaa/AggregatedInputs";
+import {PreferenceStatistics} from "@/components/cmaa/PreferenceStatistics";
 
 
 export default function CAAPage() {
@@ -695,15 +696,15 @@ export default function CAAPage() {
 
 
     /** unit testing
-    // 1. each sum of row of judgements from alternatives = r1 of that altWinner
-    // 2. each sum of row of preferences from criteria = r1 of that altWinner
-    // 3. rai: sum of sums of rows = sum of sums of cols = number of alternatives
-**/
+     // 1. each sum of row of judgements from alternatives = r1 of that altWinner
+     // 2. each sum of row of preferences from criteria = r1 of that altWinner
+     // 3. rai: sum of sums of rows = sum of sums of cols = number of alternatives
+     **/
 
-    // check if in range
+        // check if in range
     const isBetween = (x: number, min: number, max: number) => {
-        return x >= min && x <= max;
-    };
+            return x >= min && x <= max;
+        };
 
     function checkJudgements() {
 
@@ -733,7 +734,7 @@ export default function CAAPage() {
                         judgCounterSum += judgCircCounter[altWinner][crit][alt][judgeIdx];
                     }
 
-                    if (!isBetween(checkSum, judgCounterSum-errorMargin, judgCounterSum+errorMargin)) {
+                    if (!isBetween(checkSum, judgCounterSum - errorMargin, judgCounterSum + errorMargin)) {
                         console.log('Judgement Counter Check failed');
                         console.log('check sum ', checkSum, ' judg sum ', judgCounterSum);
                     }
@@ -857,7 +858,7 @@ export default function CAAPage() {
                 )}
 
             {rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
-                <Grid container size={8} offset={0.2}>
+                <Grid container size={6} offset={0.2}>
                     <RankAcceptabilityIndices
                         rankAccIdx={rankAcceptabilityIndices}
                         rankAccCounter={rankAcceptabilityCounter}
@@ -865,14 +866,24 @@ export default function CAAPage() {
                 </Grid>
             )}
 
-            {rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
-                <Grid container size={8} offset={0.2}>
+            {/*{rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
+                <Grid container size={6} offset={0.2}>
                     <RankAcceptabilityIndices
                         rankAccIdx={rankAcceptabilityCounter}
                         rankAccCounter={rankAcceptabilityCounter}
                     />
                 </Grid>
-            )}
+            )}*/}
+            {rankAcceptabilityCounter && rankAcceptabilityCounter.length > 0 &&
+                preferencesCircumstanceCounterRef.current &&
+                preferencesCircumstanceCounterRef.current.length > 0 &&
+                preferencesMultiInputs.length > 0 &&
+                (<Grid container size={12} offset={0.1}>
+                        <PreferenceStatistics rankAcceptabilityCounter={rankAcceptabilityCounter}
+                                              prefCircumstanceCounter={preferencesCircumstanceCounterRef.current!}
+                                              prefsMultiInputs={preferencesMultiInputs}/>
+                    </Grid>
+                )}
         </Grid>
     );
 }
