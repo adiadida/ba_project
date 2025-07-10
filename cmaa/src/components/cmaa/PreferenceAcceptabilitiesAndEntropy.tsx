@@ -213,6 +213,12 @@ export const PreferenceAcceptabilitiesAndEntropy = ({
 
     // Generate an array of React elements representing the acceptabilities
     const generateAcceptabilites = () => {
+
+        // error handling
+        if (currentPrefAcceptability === undefined || currentPrefAcceptability[0][0][0] === undefined || potentialPrefAcceptability === undefined || potentialPrefAcceptability[0][0][0] === undefined) {
+            return;
+        }
+
         const acceptabilities = [];
         for (let winner = 0; winner < prefCircumstanceCounter.length; winner++) {
             const altWinner = winner + 1;
@@ -238,14 +244,19 @@ export const PreferenceAcceptabilitiesAndEntropy = ({
     };
 
     return (<Grid container spacing={2} size={12}>
-        <Grid container spacing={2} size={6}>
+        <Grid container spacing={2} size={12}>
+            {potentialPrefAcceptability && potentialPrefAcceptability.length > 0 && currentPrefAcceptability && currentPrefAcceptability.length > 0 && (
+                generateAcceptabilites()
 
-            {generateAcceptabilites()}
+            )}
 
         </Grid>
         <Grid container spacing={2} size={6}>
-            <PotentialPreferenceEntropyDataGrid prefsMultiInputs={prefsMultiInputs}
-                                                potPrefsEntropy={potentialPreferenceEntropy}/>
+            {potentialPreferenceEntropy && potentialPreferenceEntropy.length > 0 && (
+                <PotentialPreferenceEntropyDataGrid prefsMultiInputs={prefsMultiInputs}
+                                                    potPrefsEntropy={potentialPreferenceEntropy}/>
+            )}
+
         </Grid>
     </Grid>)
 }

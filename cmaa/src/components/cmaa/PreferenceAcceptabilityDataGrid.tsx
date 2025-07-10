@@ -1,12 +1,208 @@
-export const PreferenceAcceptabilityDataGrid = ({isCurrent, altWinner, preferenceAcceptability, preferenceMultiInputs}:PreferenceAcceptabilityProps) => {
-  return (
-      <></>
-  )
+import {Box, Card, CardContent, CardHeader, Grid} from "@mui/material";
+import {DataGrid, GridCellParams, GridColDef} from "@mui/x-data-grid";
+
+export const PreferenceAcceptabilityDataGrid = ({
+                                                    isCurrent,
+                                                    altWinner,
+                                                    preferenceAcceptability,
+                                                    preferenceMultiInputs
+                                                }: PreferenceAcceptabilityProps) => {
+
+    // Flatten data to find global min and max
+    const allValues = preferenceAcceptability.flat();
+    const minValue = Math.min(...allValues);
+    const maxValue = Math.max(...allValues);
+
+
+    // Function to interpolate color from green to yellow to red
+    // higher number green and lower number red
+    // for heatmap
+    const getColor = (value: number): string => {
+        // Handle edge cases where minValue == maxValue
+        const ratio = minValue === maxValue ? 0 : (value - minValue) / (maxValue - minValue);
+        // Invert the ratio so that higher values are green
+        const invertedRatio = 1 - ratio;
+
+        let red: number, green: number, blue: number = 0;
+
+        if (invertedRatio <= 0.5) {
+            // First half: green to yellow
+            // ratioInSegment goes from 0 to 1
+            const ratioInSegment = invertedRatio / 0.5;
+            red = Math.round(255 * ratioInSegment);
+            green = 255;
+        } else {
+            // Second half: yellow to red
+            const ratioInSegment = (invertedRatio - 0.5) / 0.5;
+            red = 255;
+            green = Math.round(255 * (1 - ratioInSegment));
+        }
+
+        return `rgb(${red}, ${green}, ${blue})`;
+    };
+
+    function generatePrefCols() {
+        // get number of preferences
+        let maxNumPrefs = 0;
+        for (let criterion = 0; criterion < preferenceMultiInputs.length; criterion++) {
+
+            if (preferenceMultiInputs[criterion].length > maxNumPrefs) {
+                maxNumPrefs = preferenceMultiInputs[criterion].length;
+            }
+        }
+
+        const cols: GridColDef[] = [
+            {
+                field: 'criteria',
+                headerName: 'criteria',
+                maxWidth: 100,
+            },
+        ]
+        // variable prefs like pref1, pref2 etc
+        // Generate preference columns dynamically
+        for (let prefIndex = 0; prefIndex < maxNumPrefs; prefIndex++) {
+            cols.push({
+                field: `pref${prefIndex + 1}`,
+                headerName: `Preference ${prefIndex + 1}`,
+                minWidth: 100,
+                maxWidth: 150,
+                renderCell: (params: GridCellParams) => {
+                    const value = params.value as number | undefined;
+                    if (typeof value !== 'number') {
+                        return null; // or a placeholder if preferred
+                    }
+                    let backgroundColor = getColor(value);
+
+                    if (value > 1) { // case: if input is preferences color needs to be based on preferenceAcceptability
+
+                        // identify criterion -> row has a 'criteria' field to identify the criterion
+                        const critProperty = params.row.criteria;
+                        //console.log(critProperty); // example 'criterion 3'
+                        //console.log(parseInt(critProperty, 10)) //  why is this NaN?
+                        const match = critProperty.match(/\d+/); // regex to extract number from string criterion n
+                        const critIdx = match ? parseInt(match[0], 10) - 1 : null; // convert string to integer index
+
+                        if (critIdx !== null && preferenceAcceptability[critIdx]) {
+                            const val = preferenceAcceptability[critIdx][prefIndex];
+                            backgroundColor = getColor(val);
+                        }
+                    }
+
+                    return (
+                        <Box
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                backgroundColor,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            {value < 1 && value.toFixed(3) || value >= 1 && value.toFixed()}
+                        </Box>
+                    );
+                },
+            });
+        }
+
+        return cols;
+
+    }
+
+    interface PrefRow {
+        id: string,
+        criteria: string,
+
+        // variable number of preferences
+        [p: string]: any,
+    }
+
+    type PreferenceProperties = {
+        [key: string]: any;
+    };
+
+
+    // generate rows from preferanceAcceptability
+    // generate rows from preferanceMultiInputs
+    function generatePrefRows(prefsArray: number[][]) {
+
+        const prefRows: PrefRow[] = [];
+
+        // Generate an object with keys like 'pref1', 'pref2',
+        const prefProperties: PreferenceProperties = [];
+
+        // get number of preferences
+        let maxNumPrefs = 0;
+        for (let criterion = 0; criterion < prefsArray.length; criterion++) {
+
+            if (prefsArray[criterion].length > maxNumPrefs) {
+                maxNumPrefs = prefsArray[criterion].length;
+            }
+        }
+
+        // generate prefProperties
+        for (let i = 0; i < maxNumPrefs; i++) {
+            prefProperties.push(`pref${i + 1}`);
+        }
+
+        for (let crit = 0; crit < prefsArray.length; crit++) {
+
+            const prefRow: PrefRow = {
+                id: `crit${crit + 1}`,
+                criteria: `criterion ${crit + 1}`,
+                ...prefProperties,
+            }
+            // define prefProperties
+            for (let pref = 0; pref < prefsArray[crit].length; pref++) {
+                const prefName = `pref${pref + 1}`;
+                prefRow[prefName] = prefsArray[crit][pref];
+            }
+
+            prefRows.push(prefRow);
+        }
+
+        return prefRows;
+    }
+
+
+    const prefCols: GridColDef[] = generatePrefCols();
+    const prefAcceptabilityRows: PrefRow[] = generatePrefRows(preferenceAcceptability);
+    const prefRows: PrefRow[] = generatePrefRows(preferenceMultiInputs);
+
+    const headerText = () => {
+        if (isCurrent) {
+            return 'Current Preference Acceptability';
+        } else {
+            return 'Potential Preference Acceptability';
+        }
+    }
+
+    return (
+        <Grid>
+            <Card>
+                <CardHeader slotpropstitle={'body1'} title={headerText()} subheader={`alternative ${altWinner}`}/>
+                <CardContent>
+                    <Grid container spacing={2}>
+                        <Grid size={6}>
+                            <DataGrid columns={prefCols} rows={prefAcceptabilityRows} autoPageSize={false}
+                                      hideFooter={true}/>
+                        </Grid>
+                        <Grid size={6}>
+                            <DataGrid columns={prefCols} rows={prefRows} autoPageSize={false}
+                                      hideFooter={true}/>
+                        </Grid>
+                    </Grid>
+
+                </CardContent>
+            </Card>
+            </Grid>
+    )
 }
 
-export type PreferenceAcceptabilityProps ={
+export type PreferenceAcceptabilityProps = {
     isCurrent: boolean,
     altWinner: number;
-    preferenceAcceptability: number[][]; // array at idx of altWinner
+    preferenceAcceptability: number[][]; // array at idx of altWinner -> [criterion][preference]
     preferenceMultiInputs: number[][];
 }
