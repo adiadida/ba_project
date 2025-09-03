@@ -158,13 +158,35 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
     const rows: Row[] = generateRows();
 
     //console.log('gen rows ', rows);
+    function generatDataGridWidth(rows: Row[]) {
+
+        let width = rows.length*110;
+
+        let extra= 0;
+
+        switch (rows.length) {
+            case 1: extra=25; break;
+            case 2: extra=25; break;
+            case 3: extra=25; break;
+            case 4: extra=23; break;
+            case 5: extra=15; break;
+            case 6: extra=10; break;
+            default: extra=15-rows.length; break;
+
+        }
+
+        width+=rows.length*extra;
+
+        return width;
+
+    }
 
     return (
         <Grid container spacing={2}>
             <Grid>
                 {message}
             </Grid>
-            <Grid sx={{marginBottom: '1em', width:`${rows.length*115}px`}}>
+            <Grid sx={{marginBottom: '1em', width:`${generatDataGridWidth(rows)}px`}}>
                 <DataGrid rows={rows} columns={columns}
 
                           autoPageSize={false}

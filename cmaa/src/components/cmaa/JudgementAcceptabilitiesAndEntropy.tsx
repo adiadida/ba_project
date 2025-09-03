@@ -1,6 +1,7 @@
 import {Grid} from "@mui/material";
 import {useEffect, useState} from "react";
 import {JudgementAcceptabilityDataGrid} from "@/components/cmaa/JudgementAcceptabilityDataGrid";
+import {PotentialJudgementEntropyDataGrid} from "@/components/cmaa/PotentialJudgementEntropyDataGrid";
 
 
 export const JudgementAcceptabilitiesAndEntropy = ({
@@ -176,7 +177,7 @@ export const JudgementAcceptabilitiesAndEntropy = ({
                 setPotentialJudgAcceptability(potJudgAcc);
                 const judgEntropy = computeJudgementEntropy(potJudgAcc);
                 setPotentialJudgementEntropy(judgEntropy);
-                //console.log('pot judg entr: ', judgEntropy);
+                console.log('pot judg entr: ', judgEntropy);
             }
         }
 
@@ -188,7 +189,7 @@ export const JudgementAcceptabilitiesAndEntropy = ({
         for (let winner = 0; winner < judgCircumstanceCounter.length; winner++) {
             const altWinner = winner + 1;
             acceptabilities.push(
-                <Grid key={`currAltWinner${winner}`}>
+                <Grid key={`currAltWinner${winner}`} size={12}>
                     <JudgementAcceptabilityDataGrid isCurrent={true} altWinner={altWinner}
                                                      judgementAcceptability={currentJudgAcceptability[winner]}
                                                      judgementMultiInputs={judgMultiInputs}/>
@@ -196,7 +197,7 @@ export const JudgementAcceptabilitiesAndEntropy = ({
             );
             //console.log('current JA for altWinner ', altWinner,currentJudgAcceptability[winner])
             acceptabilities.push(
-                <Grid key={`potAltWinner${winner}`}>
+                <Grid key={`potAltWinner${winner}`} size={12}>
                     <JudgementAcceptabilityDataGrid isCurrent={false} altWinner={altWinner}
                                                      judgementAcceptability={potentialJudgAcceptability[winner]}
                                                      judgementMultiInputs={judgMultiInputs}/>
@@ -210,14 +211,18 @@ export const JudgementAcceptabilitiesAndEntropy = ({
 
     return (
         <Grid container spacing={2} size={12}>
-            <Grid container spacing={2} size={6}>
-
+            {potentialJudgAcceptability.length > 0  &&(
+                <Grid container spacing={2} size={12}>
                 {generateAcceptabilites()}
-
             </Grid>
-            <Grid container spacing={2} size={6}>
+            )}
 
+            {potentialJudgementEntropy.length>0 &&(
+                <Grid container spacing={2} size={12}>
+                    <PotentialJudgementEntropyDataGrid judgementMultiInputs={judgMultiInputs} potJudgEntropy={potentialJudgementEntropy}/>
             </Grid>
+            )}
+
         </Grid>
     )
 }

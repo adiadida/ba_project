@@ -73,7 +73,7 @@ export const PreferenceAcceptabilityDataGrid = ({
                     }
                     let backgroundColor = getColor(value);
 
-                    if (value > 1) { // case: if input is preferences color needs to be based on preferenceAcceptability
+                    if (value >= 1) { // case: if input is preferences color needs to be based on preferenceAcceptability
 
                         // identify criterion -> row has a 'criteria' field to identify the criterion
                         const critProperty = params.row.criteria;
@@ -181,7 +181,7 @@ export const PreferenceAcceptabilityDataGrid = ({
     return (
         <Grid>
             <Card>
-                <CardHeader slotpropstitle={'body1'} title={headerText()} subheader={`alternative ${altWinner}`}/>
+                <CardHeader slotpropstitle={'body1'} title={headerText()} subheader={`alternative winner ${altWinner}`}/>
                 <CardContent>
                     <Grid container spacing={2}>
                         <Grid size={6}>
