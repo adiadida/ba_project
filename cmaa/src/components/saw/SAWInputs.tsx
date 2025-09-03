@@ -4,13 +4,13 @@ import {Grid} from "@mui/material";
 import {GenericInput} from "@/components/generics/GenericInput";
 import {SWAInputCardProps} from "@/components/saw/SAWInputCard";
 
-export const SAWInputs = ({inputs, onData}: SWAInputCardProps) => {
+export const SAWInputs = ({inputs, onDataAction}: SWAInputCardProps) => {
 
     const handleInputChange = (name: string, value: string) => {
         // Convert value to number if needed
         const numValue = Number(value);
         const updatedValue = isNaN(numValue) ? value : numValue;
-        onData({ ...inputs, [name]: updatedValue });
+        onDataAction({ ...inputs, [name]: updatedValue });
     };
 
     return (

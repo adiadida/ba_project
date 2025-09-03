@@ -2,13 +2,13 @@ import {GenericInputCard, InputProps} from "@/components/generics/GenericInputCa
 import {SAWInputs} from "@/components/saw/SAWInputs";
 import {useRouter} from "next/navigation";
 
-export const SAWInputCard = ({inputs, onData}: SWAInputCardProps) => {
+export const SAWInputCard = ({inputs, onDataAction}: SWAInputCardProps) => {
 
     // Hooks need to be declared in the first line of a function or outside
     const router = useRouter();
 
     const handleDataChange = (newInputs: InputProps) => {
-        onData(newInputs);
+        onDataAction(newInputs);
     };
 
     const handleNext = (inputs: InputProps) => {
@@ -28,7 +28,7 @@ export const SAWInputCard = ({inputs, onData}: SWAInputCardProps) => {
             criteria: criteria.toString(),
         }).toString();
 
-        // Navigate to SWAPage with params
+        // Navigate to SAWPage with params
         router.push(`/groupdecision/inputsaw?${query}`);
 
 
@@ -42,8 +42,8 @@ export const SAWInputCard = ({inputs, onData}: SWAInputCardProps) => {
     };
 
     return (
-        <GenericInputCard cardTitle={'Schritt 1: Nutzwerte berechnen (SAW)'}
-                          inputChild={<SAWInputs inputs={inputs} onData={handleDataChange}/>}
+        <GenericInputCard cardTitle={'Tabellen für die Bewertungen der Entscheidungsträger generieren'}
+                          inputChild={<SAWInputs inputs={inputs} onDataAction={handleDataChange}/>}
                           buttonTitle={'generieren'} onClick={handleButtonClick} inputs={inputs}
                           onChange={handleDataChange}/>
     )
@@ -52,5 +52,5 @@ export const SAWInputCard = ({inputs, onData}: SWAInputCardProps) => {
 
 export type SWAInputCardProps = {
     inputs: InputProps;
-    onData: (inputs: InputProps) => void;
+    onDataAction: (inputs: InputProps) => void;
 }
