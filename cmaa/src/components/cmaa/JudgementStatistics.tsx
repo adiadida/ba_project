@@ -21,7 +21,7 @@ export const JudgementStatistics = ({
     }, [rankAcceptabilityCounter]);
 
     return (
-        <Grid container spacing={2} size={{md: 12, lg: 6}}>
+        <Grid container spacing={2} size={12}>
             <Grid>
                 <JudgementAcceptabilitiesAndEntropy kMonteCarlo={kMonteCarlo} judgCircumstanceCounter={judgCircumstanceCounter} judgMultiInputs={judgMultiInputs} />
             </Grid>
