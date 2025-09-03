@@ -3,15 +3,11 @@
 import {GenericHeader} from "@/components/generics/GenericHeader";
 import {useSearchParams} from "next/navigation"; // useRouter hook should be imported from next/navigation
 import React, {useEffect, useRef, useState} from "react";
-import {Box, Grid} from "@mui/material";
+import {Grid} from "@mui/material";
 import seedrandom from "seedrandom";
 import {testData} from "@/components/cmaa/TestData";
-import {Accordion, AccordionSummary, AccordionDetails, Typography} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import {RankAcceptabilityIndices} from "@/components/cmaa/RankAcceptabilityIndices";
 import {AggregatedInputs} from "@/components/cmaa/AggregatedInputs";
-import {PreferenceStatistics} from "@/components/cmaa/PreferenceStatistics";
-import {JudgementStatistics} from "@/components/cmaa/JudgementStatistics";
+import {StatisticsAccordion} from "@/components/cmaa/StatisticsAccordion";
 
 
 export default function CAAPage() {
@@ -103,11 +99,11 @@ export default function CAAPage() {
     useEffect(() => {
         const aggPrefs: Set<number>[] = aggPreferences(decisionMakerData);
         setAggregatedPreferences(aggPrefs);
-        console.log('Aggregated Preferences:', aggPrefs);
+        //console.log('Aggregated Preferences:', aggPrefs);
 
         const aggJudgs: Set<number>[][] = aggJudgements(decisionMakerData);
         setAggregatedJudgements(aggJudgs);
-        console.log('Aggregated Judgements:', aggJudgs);
+        //console.log('Aggregated Judgements:', aggJudgs);
 
         const initialRACounter: number [][] = initializeRankAcceptabilityMatrix(decisionMakerData);
         setRankAcceptabilityCounter(initialRACounter);
@@ -133,14 +129,14 @@ export default function CAAPage() {
             const prefInst = initializePreferencesMulti();
             setPreferencesMultiInputs(prefInst.preferencesInputs);
             preferencesCircumstanceCounterRef.current = prefInst.prefCircCounter;
-            console.log('aggregated prefs in Multimatrix form', prefInst.preferencesInputs);
-            console.log('initial prefs counter in Multimatrix form', prefInst.prefCircCounter);
+            //console.log('aggregated prefs in Multimatrix form', prefInst.preferencesInputs);
+            //console.log('initial prefs counter in Multimatrix form', prefInst.prefCircCounter);
 
             const judgInst = initializeJudgementsMulti();
             setJudgementsMultiInputs(judgInst.judgementsInputs);
             judgementsCircumstanceCounterRef.current = judgInst.judgCircCounter;
-            console.log('aggregated judg in Multimatrix form', judgInst.judgementsInputs);
-            console.log('initial judg counter in Multimatrix form', judgInst.judgCircCounter);
+            //console.log('aggregated judg in Multimatrix form', judgInst.judgementsInputs);
+            //console.log('initial judg counter in Multimatrix form', judgInst.judgCircCounter);
         }
     }, [aggregatedPreferences, aggregatedJudgements])
 
@@ -860,81 +856,24 @@ export default function CAAPage() {
             )}
 
 
-            <Grid container size={12} padding={2} borderRight={2}>
-                <Accordion>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
-                        <Typography>zusätzliche Statistiken für den Moderator</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
+            <Grid container size={12} margin={1} alignItems={"center"}>
 
-                        <Box sx={{width: '95vw', margin: '1 auto'}}>
-                            {/* Accordion for Rank Acceptability Indices */}
-                            <Accordion>
-                                <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
-                                    <Typography>Rank Acceptability Indices</Typography>
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    <Box sx={{width: '95vw', margin: '0 auto'}}>
-                                        {rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
-                                            <Grid container size={6} offset={0.2}>
-                                                <RankAcceptabilityIndices
-                                                    rankAccIdx={rankAcceptabilityIndices}
-                                                    rankAccCounter={rankAcceptabilityCounter}
-                                                />
-                                            </Grid>
-                                        )}
-                                    </Box>
-                                </AccordionDetails>
-                            </Accordion>
+                {
+                    preferencesCircumstanceCounterRef.current &&
+                    preferencesCircumstanceCounterRef.current.length > 0 &&
 
-                            {/* Accordion for Preference Statistics */}
-                            <Accordion>
-                                <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
-                                    <Typography>Preference Statistics</Typography>
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    <Box sx={{width: '95vw', margin: '0 auto'}}>
-                                        {rankAcceptabilityCounter && rankAcceptabilityCounter.length > 0 &&
-                                            preferencesCircumstanceCounterRef.current &&
-                                            preferencesCircumstanceCounterRef.current.length > 0 &&
-                                            preferencesMultiInputs.length > 0 && (
-                                                <Grid container size={12} offset={0.1}>
-                                                    <PreferenceStatistics
-                                                        rankAcceptabilityCounter={rankAcceptabilityCounter}
-                                                        prefCircumstanceCounter={preferencesCircumstanceCounterRef.current!}
-                                                        prefsMultiInputs={preferencesMultiInputs}
-                                                    />
-                                                </Grid>
-                                            )}
-                                    </Box>
-                                </AccordionDetails>
-                            </Accordion>
+                    judgementsCircumstanceCounterRef.current &&
+                    judgementsCircumstanceCounterRef.current.length > 0 &&
+                    (
+                        <StatisticsAccordion rankAcceptabilityIndices={rankAcceptabilityIndices}
+                                             rankAcceptabilityCounter={rankAcceptabilityCounter}
+                                             preferencesCircumstanceCounterRef={preferencesCircumstanceCounterRef.current!}
+                                             preferencesMultiInputs={preferencesMultiInputs}
+                                             judgementsCircumstanceCounterRef={judgementsCircumstanceCounterRef.current!}
+                                             judgementsMultiInputs={judgementsMultiInputs}/>
+                    )}
 
-                            {/* Accordion for Judgement Statistics */}
-                            <Accordion>
-                                <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
-                                    <Typography>Judgement Statistics</Typography>
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    <Box sx={{width: '95vw', margin: '0 auto'}}>
-                                        {rankAcceptabilityCounter && rankAcceptabilityCounter.length > 0 &&
-                                            judgementsCircumstanceCounterRef.current &&
-                                            judgementsCircumstanceCounterRef.current.length > 0 &&
-                                            judgementsMultiInputs.length > 0 && (
-                                                <Grid container size={12} offset={0.1}>
-                                                    <JudgementStatistics
-                                                        rankAcceptabilityCounter={rankAcceptabilityCounter}
-                                                        judgCircumstanceCounter={judgementsCircumstanceCounterRef.current!}
-                                                        judgMultiInputs={judgementsMultiInputs}
-                                                    />
-                                                </Grid>
-                                            )}
-                                    </Box>
-                                </AccordionDetails>
-                            </Accordion>
-                        </Box>
-                    </AccordionDetails>
-                </Accordion>
+
             </Grid>
         </Grid>
     );
