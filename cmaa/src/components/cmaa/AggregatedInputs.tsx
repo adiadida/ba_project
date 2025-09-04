@@ -1,6 +1,6 @@
-import {Box, Grid} from "@mui/material";
-import {DataGrid, GridCellParams, GridColDef} from "@mui/x-data-grid";
-import clsx from "clsx";
+import {/*Box,*/ Grid, Typography} from "@mui/material";
+import {DataGrid, /*GridCellParams,*/ GridColDef} from "@mui/x-data-grid";
+//import clsx from "clsx";
 
 export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProps) => {
 
@@ -14,7 +14,7 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
             },
             {
                 field: 'aggWeights',
-                headerName: 'aggregated weights',
+                headerName: 'preferences',
                 minWidth: 200,
                 maxWidth: 300,
 
@@ -141,6 +141,8 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
     const judgeCols: GridColDef[] = generateJudgeCols();
     const judgeRows: JudgeRow[] = generateJudgeRows();
 
+    /** isn't needed for use case, might be needed later*/
+    /*
     function generateCellClassName(params: GridCellParams<any, number>) {
         if (params.value == null) return '';
 
@@ -164,10 +166,10 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
             withConflicts: conflict > 1,
         });
     }
-
-
-    return (
-        <Box
+*/
+    /*
+    *
+    *  <Box
             sx={{
                 height: 1,
                 width: '100%',
@@ -203,7 +205,31 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
                     />
                 </Grid>
             </Grid>
-        </Box>
+        </Box>*/
+
+    return (
+
+        <Grid container sx={{width: '90vw'}} spacing={2}>
+            <Grid size={12} padding={1}>
+                <Typography>Zusammenfassung der Bewertungen</Typography>
+            </Grid>
+            <Grid size={{sm:12,md:6, lg:3}}>
+                <DataGrid rows={prefRows} columns={prefCols}
+
+
+                          autoPageSize={false}
+                          hideFooter={true}
+                />
+            </Grid>
+            <Grid sx={{width: `${judgeRows.length * 140}px`}}>
+                <DataGrid rows={judgeRows} columns={judgeCols}
+
+
+                          autoPageSize={false}
+                          hideFooter={true}
+                />
+            </Grid>
+        </Grid>
     )
 }
 
