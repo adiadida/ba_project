@@ -506,6 +506,7 @@ export default function CAAPage() {
         judgementsCircumstanceCounterRef.current = judgCircCounter;
     }
 
+    // --- Seeded RNG ---
     // use randomNumberGenerator with uniform chance for Monte Carlo simulations
 
     // UseRef to hold the seedrandom generator instance
@@ -532,7 +533,7 @@ export default function CAAPage() {
         initializeGenerator(/*'4321'*/); // CHANGE SEED HERE
     }, []);
 
-
+    // --- Generate Random Instance ---
     const generateRandomInstance = (aggrPreferences: Set<number>[], aggrJudgements: Set<number>[][], seed?: string) => {
         // Initialize generator if seed provided (rng already initialized otherwise)
         if (seed) {
@@ -694,6 +695,7 @@ export default function CAAPage() {
     }, [decisionMakerData, aggregatedPreferences, aggregatedJudgements, preferencesMultiInputs, judgementsMultiInputs]);
 
 
+    // --- Checks ---
     /** unit testing
      // 1. each sum of row of judgements from alternatives = r1 of that altWinner
      // 2. each sum of row of preferences from criteria = r1 of that altWinner
@@ -842,6 +844,7 @@ export default function CAAPage() {
 
     }, [rankAcceptabilityCounter, preferencesCircumstanceCounterRef.current, judgementsCircumstanceCounterRef.current, rankAcceptabilityIndices])
 
+    // --- UI Rendering ---
     return (
         <Grid container spacing={2} alignItems="center">
             <GenericHeader title="Gruppenentscheidung - Dashboard"/>
