@@ -3,17 +3,20 @@ import Grid from "@mui/material/Grid";
 import {SAWDataGrid} from "@/components/saw/SAWDataGrid";
 import {GenericLikertCard} from "@/components/generics/GenericLikertCard";
 import {Button} from "@mui/material";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
 
-export const SAWTables = ({numCols, numRows, numDM}: SWATablesProps) => {
+export const SAWTables = ({numCols, numRows, numDM}: SAWTablesProps) => {
 
     // central data collection for each decision maker
     const [decisionMakerData, setDecisionMakerData] = useState<{ [dmId: string]: any }>({});
 
+    // state to hold fullness status of tables
+    const [areEmpty, setAreEmpty] = useState<boolean>(true);
+
     // Function to update data for a specific decision maker
     const handleDataChange = (dmId: string, data: any) => {
-        setDecisionMakerData(prev => ({ ...prev, [dmId]: data }));
+        setDecisionMakerData(prev => ({...prev, [dmId]: data}));
     };
 
     const router = useRouter();
@@ -26,6 +29,50 @@ export const SAWTables = ({numCols, numRows, numDM}: SWATablesProps) => {
         router.push(`/groupdecision/inputcaa?data=${dataString}`);
     };
 
+    // error handling - Button disabled as long as tables not filled
+    // Check if all tables are filled
+    const areTablesEmpty = () => {
+
+        for (let i = 0; i < numDM; i++) {
+            const dmId = `${i + 1}`;
+            const data = decisionMakerData[dmId];
+
+            if (!data || data.length === 0) {
+                // No data for this decision maker
+                return true;
+            }
+
+            for (const row of data) {
+
+                if (typeof row.weight !== 'number' && row.id<1000) {
+                        return true; // Invalid weight
+                }
+
+                // For rows that contain alt properties (like 'alt1', 'alt2', etc.)
+                for (const key in row) {
+                    if (key.startsWith('alt')) {
+                        const value = row[key];
+
+                        // Check if value is an integer (parser already only allows between 1 and 5)
+                        if (
+                            typeof value !== 'number'
+                        ) {
+                            return true; // Invalid alt value
+                        }
+                    }
+                }
+            }
+        }
+        // If all checks pass, tables are filled correctly
+        return false;
+    };
+
+    // Effect to continuously check fullness of tables onDataChange
+    useEffect(() => {
+        const isEmpty= areTablesEmpty();
+        setAreEmpty(isEmpty);
+    },[decisionMakerData])
+
     // Generate an array of React elements representing the tables
     const generateTables = () => {
         const tables = [];
@@ -33,7 +80,8 @@ export const SAWTables = ({numCols, numRows, numDM}: SWATablesProps) => {
             const dmId = `${i + 1}`;
             tables.push(
                 <Grid key={i} size={{xs: 11, md: 5, lg: 3.8}}>
-                    <SAWDataGrid id={dmId} numCols={numCols} numRows={numRows} onDataChange={(data) => handleDataChange(dmId, data)}/>
+                    <SAWDataGrid id={dmId} numCols={numCols} numRows={numRows}
+                                 onDataChange={(data) => handleDataChange(dmId, data)}/>
                 </Grid>
             );
         }
@@ -65,8 +113,9 @@ export const SAWTables = ({numCols, numRows, numDM}: SWATablesProps) => {
 
             <Grid container direction={'row'} spacing={2} alignItems={'center'} justifyContent={'flex-end'}
                   size={12}>
-                <Grid size={1}>
-                   <Button variant={'contained'} onClick={handleButtonClick}>zu Schritt 2</Button>
+                <Grid size={2}>
+                    <Button variant={'contained'} disabled={areEmpty} onClick={handleButtonClick}>Diskussion
+                        starten</Button>
                 </Grid>
             </Grid>
 
@@ -74,7 +123,7 @@ export const SAWTables = ({numCols, numRows, numDM}: SWATablesProps) => {
     )
 }
 
-export type SWATablesProps = {
+export type SAWTablesProps = {
     numCols: number,
     numRows: number,
     numDM: number,
