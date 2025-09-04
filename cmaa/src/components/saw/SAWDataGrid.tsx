@@ -126,13 +126,21 @@ export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps)
         const rowHeaders = generateRowHeaders();
 
         //create missing properties in data object
-        const colHeaders = generateColHeaders()
+        const colHeaders = generateColHeaders() // e.g. ["criteria","criterion weight","alternative 1","alternative 2"]
 
         // Generate an object with keys like 'alt1', 'alt2', ..., each initialized to undefined
-        const altProperties: AltProperties = colHeaders.reduce((acc, _, index) => {
-            acc[`alt${index + 1}`] = undefined;
-            return acc;
-        }, {} as AltProperties);
+        const generateAltProperties = (colHeaders: string[]): AltProperties => {
+            const altProperties: AltProperties = {};
+            // Start from index 2 (third header)
+            for (let i = 2; i < colHeaders.length; i++) {
+                // Property name: 'alt' + (i - 1) because headers start at index 2
+                const altKey = `alt${i - 1}`;
+                altProperties[altKey] = undefined;
+            }
+            return altProperties;
+        }
+
+        const altProperties: AltProperties = generateAltProperties(colHeaders);
 
         const dataRows: Array<{
             id: number;
@@ -179,6 +187,11 @@ export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps)
     // process user inputs and update row data
     const handleProcessRowUpdate = (newRow: Row) => {
 
+        //error handling
+        if (rows[newRow.id] === undefined) {
+            return newRow;
+        }
+
         // update old row
         let updatedRows = rows.map((row) =>
             row.id === newRow.id ? {...row, ...newRow} : row
@@ -206,7 +219,7 @@ export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps)
         // Compute sums
         for (let i = 0; i < rows.length; i++) { // iterates over rows
             const row = rows[i];
-            console.log(row)
+            //console.log(row)
             /*row = {alt1: 1, alt2: 3, criteria: "criterion 1", id: 0, weight: 50}*/
 
             if (row.id !== 1000) {
