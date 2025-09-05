@@ -216,17 +216,17 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
             <Grid size={{sm:12,md:6, lg:3}}>
                 <DataGrid rows={prefRows} columns={prefCols}
 
-
                           autoPageSize={false}
                           hideFooter={true}
+                          density={'compact'}
                 />
             </Grid>
             <Grid sx={{width: `${judgeRows.length * 140}px`}}>
                 <DataGrid rows={judgeRows} columns={judgeCols}
 
-
                           autoPageSize={false}
                           hideFooter={true}
+                          density={'compact'}
                 />
             </Grid>
         </Grid>
