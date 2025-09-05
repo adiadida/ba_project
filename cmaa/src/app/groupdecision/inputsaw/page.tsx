@@ -30,7 +30,7 @@ export default function SAWPage() {
 
     return (
         <Grid container spacing={2}>
-            <GenericHeader title={'Schritt 1: Nutzwertanalyse'}/>
+            <GenericHeader title={'Bewertungen der Entscheidungsträger'}/>
             <SAWTables numCols={numA+2} numRows={numC+3} numDM={numDM}/>
         </Grid>
     )
