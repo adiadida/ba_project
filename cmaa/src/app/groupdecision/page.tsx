@@ -4,7 +4,7 @@ import Grid from "@mui/material/Grid";
 import {SAWInputCard} from "@/components/saw/SAWInputCard";
 import {useState} from "react";
 import {InputProps} from "@/components/generics/GenericInputCard";
-import {DecisionRequirements} from "@/components/texts/DecisionRequirements";
+import {DecisionRequirements} from "@/components/saw/DecisionRequirements";
 
 export default function DecisionPage() {
 
