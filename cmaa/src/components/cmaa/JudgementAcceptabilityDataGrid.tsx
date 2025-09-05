@@ -105,7 +105,7 @@ export const JudgementAcceptabilityDataGrid = ({
             // get judgeIdx
             const judgMatch = fieldName.match(/judg(\d+)/);
             const judgIdx = judgMatch ? parseInt(judgMatch[1], 10) - 1 : -1;
-            console.log(judgMatch, judgIdx);
+            //console.log(judgMatch, judgIdx);
 
             const judgeCol: GridColDef = {
                 field: fieldName,
