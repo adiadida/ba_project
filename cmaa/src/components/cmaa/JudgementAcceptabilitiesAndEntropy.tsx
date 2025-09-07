@@ -177,7 +177,7 @@ export const JudgementAcceptabilitiesAndEntropy = ({
                 setPotentialJudgAcceptability(potJudgAcc);
                 const judgEntropy = computeJudgementEntropy(potJudgAcc);
                 setPotentialJudgementEntropy(judgEntropy);
-                console.log('pot judg entr: ', judgEntropy);
+                //console.log('pot judg entr: ', judgEntropy);
             }
         }
 

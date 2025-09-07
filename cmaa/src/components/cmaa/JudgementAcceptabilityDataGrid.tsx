@@ -130,7 +130,7 @@ export const JudgementAcceptabilityDataGrid = ({
 
                         if (critIdx !== null && judgementAcceptability[critIdx][altNum-1][judgIdx]) {
                             const val = judgementAcceptability[critIdx][altNum - 1][judgIdx];
-                            console.log('val', val)
+                            //console.log('val', val)
                             backgroundColor = getColor(val);
                         }
                     }
