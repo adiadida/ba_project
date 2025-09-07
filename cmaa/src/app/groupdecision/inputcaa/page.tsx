@@ -8,6 +8,8 @@ import seedrandom from "seedrandom";
 import {testData} from "@/components/cmaa/TestData";
 import {AggregatedInputs} from "@/components/cmaa/AggregatedInputs";
 import {StatisticsAccordion} from "@/components/cmaa/StatisticsAccordion";
+import {ClarificationInputs} from "@/components/clarificationConference/ClarificationInputs";
+import {Recommendations} from "@/components/recommendations/Recommendations";
 
 
 export default function CAAPage() {
@@ -41,6 +43,11 @@ export default function CAAPage() {
     // judgementCircumstanceCounter
     const judgementsCircumstanceCounterRef = useRef<number[][][][] | null>(null);
 
+    // --- for user feedback ---
+    // count number of clarification conferences
+    const [stepCounter, setStepCounter] = useState<number>(0);
+    const [alternativeWinner, setAlternativeWinner] = useState<number>(0);
+    const [chanceWinner, setChanceWinner] = useState<number>(0);
 
     //for debugging
     const dPrefsRef = useRef<number[][] | null>(null);
@@ -48,6 +55,8 @@ export default function CAAPage() {
 
     // Fetch and parse data from URL params
     useEffect(() => {
+
+        // todo for resending data in data grid
 
         // newData[dmId] = {
         //   criteria: parsedData.criteria || "default criteria",
@@ -616,6 +625,34 @@ export default function CAAPage() {
         //console.log('normalized: ', rAIMatrix)
         setRankAcceptabilityIndices(rAIMatrix);
 
+         // set winner and chance of winner (needed for user feedback)
+
+        const getWinnerAndChance = ()=>{
+
+            var winner:number = -1;
+            var chance:number = -1;
+
+            const rankOne = rAIMatrix[0]
+
+            for (let i = 0; i < rankOne.length; i++) {
+                if(chance<rankOne[i]){
+                    chance=rankOne[i];
+                    winner= i+1;
+                }
+            }
+
+            chance= Math.round(chance*100);
+            return {winner, chance};
+        }
+
+        const {winner, chance} = getWinnerAndChance()   ;
+
+        setAlternativeWinner(winner);
+        //console.log(winner);
+        setChanceWinner(chance);
+        //console.log(chance);
+
+
     }
 
     function cMAA() {
@@ -849,6 +886,10 @@ export default function CAAPage() {
         <Grid container spacing={2} alignItems="center">
             <GenericHeader title="Gruppenentscheidung - Dashboard"/>
 
+            <Grid container padding={4}>
+                Visualisierungen
+            </Grid>
+
             {aggregatedJudgements && aggregatedJudgements.length > 0 && aggregatedPreferences && aggregatedPreferences.length > 0 && (
                 <Grid container size={12} spacing={2} offset={0.2}>
                     <AggregatedInputs
@@ -858,6 +899,13 @@ export default function CAAPage() {
                 </Grid>
             )}
 
+            <Grid container size={12}>
+                <Recommendations/>
+            </Grid>
+
+            <Grid container size={12}>
+                <ClarificationInputs conferenceCounter={stepCounter} setConferenceCounter={setStepCounter} alternativeWinner={alternativeWinner} chanceWinner={chanceWinner} />
+            </Grid>
 
             <Grid container size={12} margin={1} alignItems={"center"}>
 
