@@ -2,7 +2,7 @@ import Grid from "@mui/material/Grid";
 import {ClarificationFooter} from "@/components/clarificationConference/ClarificationFooter";
 import {Typography} from "@mui/material";
 import {JudgementsDataGrid, JudgementsDataGridProps} from "@/components/clarificationConference/JudgementsDataGrid";
-import {PreferencesDataGridProps} from "@/components/clarificationConference/PreferencesDataGrid";
+import {PreferencesDataGrid, PreferencesDataGridProps} from "@/components/clarificationConference/PreferencesDataGrid";
 
 export const ClarificationInputs = ({conferenceCounter, setConferenceCounter, alternativeWinner, chanceWinner, judgementMultiInputs, preferenceMultiInputs}: ClarificationInputsProps&JudgementsDataGridProps&PreferencesDataGridProps) => {
     return (
@@ -12,7 +12,10 @@ export const ClarificationInputs = ({conferenceCounter, setConferenceCounter, al
                 <Typography>Schritt 2: Ergebnis der Konflikt-Klärung festhalten</Typography>
             </Grid>
             <Grid container size={12} spacing={2}>
-                <Grid>
+                <Grid container size={4}>
+                    <PreferencesDataGrid preferenceMultiInputs={preferenceMultiInputs}/>
+                </Grid>
+                <Grid container size={8}>
                     <JudgementsDataGrid judgementMultiInputs={judgementMultiInputs}/>
                 </Grid>
             </Grid>

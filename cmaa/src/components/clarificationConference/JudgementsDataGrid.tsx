@@ -1,4 +1,4 @@
-import {DataGrid, GridColDef} from "@mui/x-data-grid";
+import {DataGrid, GridColDef, GridValueParser} from "@mui/x-data-grid";
 
 export const JudgementsDataGrid = ({judgementMultiInputs}: JudgementsDataGridProps) => {
 
@@ -38,6 +38,23 @@ export const JudgementsDataGrid = ({judgementMultiInputs}: JudgementsDataGridPro
         [key: string]: any;
     };
 
+    // col type: judgements = int on likert scale 1..5 or empty
+    const parseLikertCell: GridValueParser = (value): string | number | undefined => {
+        const valStr: string = String(value);
+
+        if (isNaN(parseInt(valStr, 10))) {
+            return String(value); //alternative names
+        } else if (value) { // judgements as numbers
+
+            let val: number = parseInt(value);
+            if (isNaN(val)) val = 0;
+            if (val < 1) val = 1;
+            if (val > 5) val = 5;
+
+            return val;
+        } else return undefined;
+    }
+
     function generateJudgeCols() {
 
         const altJudgProperties: AltJudgProperties = createAltJudgProperties();
@@ -71,9 +88,11 @@ export const JudgementsDataGrid = ({judgementMultiInputs}: JudgementsDataGridPro
             const judgeCol: GridColDef = {
                 field: fieldName,
                 headerName: fieldName.includes('judg1') ? `a ${altNum}` : '', // only gets a name if it contains judg1, e.g. 'alt1judg1'
-                minWidth: 50,
-                maxWidth: 70,
+                minWidth: 30,
+                maxWidth: 45,
                 headerAlign: "center",
+                editable: true,
+                valueParser: parseLikertCell,
             };
 
             judgeCols.push(judgeCol);
