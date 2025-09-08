@@ -4,7 +4,17 @@ import {Typography} from "@mui/material";
 import {JudgementsDataGrid, JudgementsDataGridProps} from "@/components/clarificationConference/JudgementsDataGrid";
 import {PreferencesDataGrid, PreferencesDataGridProps} from "@/components/clarificationConference/PreferencesDataGrid";
 
-export const ClarificationInputs = ({conferenceCounter, setConferenceCounter, alternativeWinner, chanceWinner, judgementMultiInputs, preferenceMultiInputs}: ClarificationInputsProps&JudgementsDataGridProps&PreferencesDataGridProps) => {
+export const ClarificationInputs = ({
+                                        conferenceCounter,
+                                        setConferenceCounter,
+                                        alternativeWinner,
+                                        chanceWinner,
+                                        handleResend,
+                                        judgementMultiInputs,
+                                        onJudgementChange,
+                                        preferenceMultiInputs,
+                                        onPreferenceChange
+                                    }: ClarificationInputsProps & JudgementsDataGridProps & PreferencesDataGridProps) => {
     return (
         <Grid container size={12} padding={4} spacing={2}>
 
@@ -13,14 +23,18 @@ export const ClarificationInputs = ({conferenceCounter, setConferenceCounter, al
             </Grid>
             <Grid container size={12} spacing={2}>
                 <Grid container size={4}>
-                    <PreferencesDataGrid preferenceMultiInputs={preferenceMultiInputs}/>
+                    <PreferencesDataGrid preferenceMultiInputs={preferenceMultiInputs}
+                                         onPreferenceChange={onPreferenceChange}/>
                 </Grid>
                 <Grid container size={8}>
-                    <JudgementsDataGrid judgementMultiInputs={judgementMultiInputs}/>
+                    <JudgementsDataGrid judgementMultiInputs={judgementMultiInputs}
+                                        onJudgementChange={onJudgementChange}/>
                 </Grid>
             </Grid>
             <Grid container size={12}>
-                <ClarificationFooter conferenceCounter={conferenceCounter} setConferenceCounter={setConferenceCounter} alternativeWinner={alternativeWinner} chanceWinner={chanceWinner} />
+                <ClarificationFooter conferenceCounter={conferenceCounter} setConferenceCounter={setConferenceCounter}
+                                     alternativeWinner={alternativeWinner} chanceWinner={chanceWinner}
+                                     handleResend={handleResend}/>
             </Grid>
         </Grid>
     )
@@ -31,4 +45,5 @@ export type ClarificationInputsProps = {
     setConferenceCounter?: (conferenceCounter: number) => void;
     alternativeWinner: number;
     chanceWinner: number;
+    handleResend: () => void;
 }

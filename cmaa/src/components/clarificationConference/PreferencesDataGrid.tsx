@@ -2,7 +2,20 @@ import {DataGrid} from "@mui/x-data-grid";
 import {GridColDef} from "@mui/x-data-grid";
 import {GridValueParser} from "@mui/x-data-grid";
 
-export const PreferencesDataGrid = ({preferenceMultiInputs}: PreferencesDataGridProps) => {
+export const PreferencesDataGrid = ({preferenceMultiInputs, onPreferenceChange}: PreferencesDataGridProps) => {
+
+    // Callback für Updates
+    const handleProcessRowUpdate = (newRow: PrefRow, oldRow: PrefRow) => {
+        // Update eigene Datenstruktur anhand des bearbeiteten Rows
+        const critIdx = parseInt(newRow.id.replace("crit", "")) - 1;
+        const updated = preferenceMultiInputs.map((row, i) =>
+            i === critIdx
+                ? row.map((val, j) => newRow[`pref${j + 1}`] ?? val)
+                : row
+        );
+        onPreferenceChange(updated);
+        return newRow;
+    };
 
     function generatePrefCols() {
         // get number of preferences
@@ -116,6 +129,7 @@ export const PreferencesDataGrid = ({preferenceMultiInputs}: PreferencesDataGrid
     return (
         <DataGrid columns={prefCols} rows={prefRows}
                   density={'compact'}
+                  processRowUpdate={handleProcessRowUpdate}
                   autoPageSize={false}
                   hideFooter={true}/>
     )
@@ -123,4 +137,5 @@ export const PreferencesDataGrid = ({preferenceMultiInputs}: PreferencesDataGrid
 
 export type PreferencesDataGridProps = {
     preferenceMultiInputs: number[][];
+    onPreferenceChange: (newPrefs: number[][]) => void;
 }

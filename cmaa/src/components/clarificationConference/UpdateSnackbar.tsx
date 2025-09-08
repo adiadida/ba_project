@@ -1,7 +1,7 @@
 import {Snackbar} from "@mui/material";
 import * as React from 'react';
 
-export const UpdateSnackbar = ({open, onClose, onResend, resendCount}: UpdateSnackbarProps) => {
+export const UpdateSnackbar = ({open, onClose, resendCount}: UpdateSnackbarProps) => {
 
     const vertical = 'top';
     const horizontal = 'center';
@@ -21,6 +21,5 @@ export const UpdateSnackbar = ({open, onClose, onResend, resendCount}: UpdateSna
 export type UpdateSnackbarProps = {
     open: boolean;
     onClose: () => void;
-    onResend: () => void;
     resendCount: number;
 };

@@ -1,6 +1,6 @@
 import {DataGrid, GridColDef, GridValueParser} from "@mui/x-data-grid";
 
-export const JudgementsDataGrid = ({judgementMultiInputs}: JudgementsDataGridProps) => {
+export const JudgementsDataGrid = ({judgementMultiInputs, onJudgementChange}: JudgementsDataGridProps) => {
 
     // get max number of judgement inputs
     function getJudgNumber() {
@@ -17,6 +17,29 @@ export const JudgementsDataGrid = ({judgementMultiInputs}: JudgementsDataGridPro
 
         return maxJudgNumber;
     }
+
+    // Callback für Updates
+    const handleProcessRowUpdate = (newRow: JudgeRow, oldRow: JudgeRow) => {
+        // judgMultiInputs[criterion][alternative][preference]
+        // Update eigene Datenstruktur anhand des bearbeiteten Rows
+        const critIdx = parseInt(newRow.id.replace("crit", "")) - 1;
+
+        // Create a copy of the existing judgementMultiInputs
+        const updated = [...judgementMultiInputs];
+
+        // Update the specific criterion's alternatives with the new values from the edited row
+        for (let alt = 0; alt < updated[critIdx].length; alt++) {
+            for (let judgIdx = 0; judgIdx < updated[critIdx][alt].length; judgIdx++) {
+                const altJudgProperty = `alt${alt + 1}judg${judgIdx + 1}`;
+                // Check if the new row has a value for the current alternative judgment
+                if (newRow[altJudgProperty] !== undefined) {
+                    updated[critIdx][alt][judgIdx] = newRow[altJudgProperty] || undefined; // Default to 0 if empty
+                }
+            }
+        }
+        onJudgementChange(updated);
+        return newRow;
+    };
 
     // create properties like alt1judg1, alt1judg2
     function createAltJudgProperties() {
@@ -154,6 +177,7 @@ export const JudgementsDataGrid = ({judgementMultiInputs}: JudgementsDataGridPro
     return (
         <DataGrid columns={judgeCols} rows={judgeRows}
                   density={'compact'}
+                  processRowUpdate={handleProcessRowUpdate}
                   autoPageSize={false}
                   hideFooter={true}/>
     )
@@ -161,5 +185,5 @@ export const JudgementsDataGrid = ({judgementMultiInputs}: JudgementsDataGridPro
 
 export type JudgementsDataGridProps = {
     judgementMultiInputs: number[][][]; // judgMultiInputs[criterion][alternative][preference]
-
+    onJudgementChange: (newJudges: number[][][]) => void;
 }
