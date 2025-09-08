@@ -62,9 +62,6 @@ export default function CAAPage() {
     // --- getting updated data and triggering cmaa
     const handleResend = () => {
 
-        // stepCounter erhöhen
-        setStepCounter(prev => prev + 1);
-
         // Rank Acceptability Counter und Indices zurücksetzen
         const initialRACounter: number [][] = initializeRankAcceptabilityMatrix(decisionMakerData);
         setRankAcceptabilityCounter(initialRACounter);
@@ -116,10 +113,12 @@ export default function CAAPage() {
         const aggJudgs: Set<number>[][] = reduceMultiJudges();
         setAggregatedJudgements(aggJudgs);
 
-        // should trigger all useEffects
+        // should trigger all necessary useEffects
         // re-initialize Multi-Inputs, Circumstance Counter - should be done by useEffect
-
         // cmaa algorithm triggered by useEffect
+
+        // stepCounter erhöhen
+        setStepCounter(prev => prev + 1);
 
     };
 
@@ -941,7 +940,7 @@ export default function CAAPage() {
 
             {judgementsMultiInputs.length > 0 && preferencesMultiInputs.length > 0 && (
                 <Grid container size={12}>
-                    <ClarificationInputs conferenceCounter={stepCounter} setConferenceCounter={setStepCounter}
+                    <ClarificationInputs conferenceCounter={stepCounter}
                                          alternativeWinner={alternativeWinner} chanceWinner={chanceWinner}
                                          handleResend={handleResend}
                                          judgementMultiInputs={judgementsMultiInputs}

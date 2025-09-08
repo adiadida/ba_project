@@ -9,7 +9,6 @@ import {ClarificationInputsProps} from "@/components/clarificationConference/Cla
 
 export const ClarificationFooter = ({
                                         conferenceCounter,
-                                        setConferenceCounter,
                                         alternativeWinner,
                                         chanceWinner,
                                         handleResend
@@ -21,9 +20,6 @@ export const ClarificationFooter = ({
     //--- for Snackbar that indicates update
     const handleOpenUpdateSnackbar = () => {
         setUpdateSnackbarOpen(true);
-        if (setConferenceCounter) {
-            setConferenceCounter(conferenceCounter + 1);
-        }
         // resend happens automatically in DataGrids, but the handleResend triggers cmaa again
         handleResend();
 
@@ -58,7 +54,7 @@ export const ClarificationFooter = ({
             <UpdateSnackbar
                 open={isUpdateSnackbarOpen}
                 onClose={handleCloseUpdateSnackbar}
-                resendCount={conferenceCounter + 1}
+                resendCount={conferenceCounter}
             />
 
             <ExitModal
