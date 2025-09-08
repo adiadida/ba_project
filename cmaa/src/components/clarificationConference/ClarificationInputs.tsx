@@ -6,7 +6,6 @@ import {PreferencesDataGrid, PreferencesDataGridProps} from "@/components/clarif
 
 export const ClarificationInputs = ({
                                         conferenceCounter,
-                                        setConferenceCounter,
                                         alternativeWinner,
                                         chanceWinner,
                                         handleResend,
@@ -32,7 +31,7 @@ export const ClarificationInputs = ({
                 </Grid>
             </Grid>
             <Grid container size={12}>
-                <ClarificationFooter conferenceCounter={conferenceCounter} setConferenceCounter={setConferenceCounter}
+                <ClarificationFooter conferenceCounter={conferenceCounter}
                                      alternativeWinner={alternativeWinner} chanceWinner={chanceWinner}
                                      handleResend={handleResend}/>
             </Grid>
@@ -42,7 +41,6 @@ export const ClarificationInputs = ({
 
 export type ClarificationInputsProps = {
     conferenceCounter: number;
-    setConferenceCounter?: (conferenceCounter: number) => void;
     alternativeWinner: number;
     chanceWinner: number;
     handleResend: () => void;
