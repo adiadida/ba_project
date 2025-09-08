@@ -33,7 +33,7 @@ export const JudgementsDataGrid = ({judgementMultiInputs, onJudgementChange}: Ju
                 const altJudgProperty = `alt${alt + 1}judg${judgIdx + 1}`;
                 // Check if the new row has a value for the current alternative judgment
                 if (newRow[altJudgProperty] !== undefined) {
-                    updated[critIdx][alt][judgIdx] = newRow[altJudgProperty] || undefined; // Default to 0 if empty
+                    updated[critIdx][alt][judgIdx] = newRow[altJudgProperty] || undefined; // Default to undefined if empty
                 }
             }
         }

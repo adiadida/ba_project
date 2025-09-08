@@ -8,11 +8,18 @@ export const PreferencesDataGrid = ({preferenceMultiInputs, onPreferenceChange}:
     const handleProcessRowUpdate = (newRow: PrefRow, oldRow: PrefRow) => {
         // Update eigene Datenstruktur anhand des bearbeiteten Rows
         const critIdx = parseInt(newRow.id.replace("crit", "")) - 1;
-        const updated = preferenceMultiInputs.map((row, i) =>
-            i === critIdx
-                ? row.map((val, j) => newRow[`pref${j + 1}`] ?? val)
-                : row
-        );
+
+        // Create a copy of the existing judgementMultiInputs
+        const updated = [...preferenceMultiInputs];
+
+        for (let prefIdx = 0; prefIdx < updated[critIdx].length; prefIdx++) {
+            const prefProperty =`pref${prefIdx+ 1}`;
+            // Check if the new row has a value for the current alternative judgment
+                if (newRow[prefProperty] !== undefined) {
+                    updated[critIdx][prefIdx] = newRow[prefProperty] || undefined; // Default to undefined if empty
+                }
+        }
+
         onPreferenceChange(updated);
         return newRow;
     };
