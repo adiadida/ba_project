@@ -625,27 +625,27 @@ export default function CAAPage() {
         //console.log('normalized: ', rAIMatrix)
         setRankAcceptabilityIndices(rAIMatrix);
 
-         // set winner and chance of winner (needed for user feedback)
+        // set winner and chance of winner (needed for user feedback)
 
-        const getWinnerAndChance = ()=>{
+        const getWinnerAndChance = () => {
 
-            var winner:number = -1;
-            var chance:number = -1;
+            var winner: number = -1;
+            var chance: number = -1;
 
             const rankOne = rAIMatrix[0]
 
             for (let i = 0; i < rankOne.length; i++) {
-                if(chance<rankOne[i]){
-                    chance=rankOne[i];
-                    winner= i+1;
+                if (chance < rankOne[i]) {
+                    chance = rankOne[i];
+                    winner = i + 1;
                 }
             }
 
-            chance= Math.round(chance*100);
+            chance = Math.round(chance * 100);
             return {winner, chance};
         }
 
-        const {winner, chance} = getWinnerAndChance()   ;
+        const {winner, chance} = getWinnerAndChance();
 
         setAlternativeWinner(winner);
         //console.log(winner);
@@ -903,9 +903,15 @@ export default function CAAPage() {
                 <Recommendations/>
             </Grid>
 
-            <Grid container size={12}>
-                <ClarificationInputs conferenceCounter={stepCounter} setConferenceCounter={setStepCounter} alternativeWinner={alternativeWinner} chanceWinner={chanceWinner} />
-            </Grid>
+            {judgementsMultiInputs.length > 0 && preferencesMultiInputs.length > 0 && (
+                <Grid container size={12}>
+                    <ClarificationInputs conferenceCounter={stepCounter} setConferenceCounter={setStepCounter}
+                                         alternativeWinner={alternativeWinner} chanceWinner={chanceWinner}
+                                         judgementMultiInputs={judgementsMultiInputs}
+                                         preferenceMultiInputs={preferencesMultiInputs}/>
+                </Grid>
+            )}
+
 
             <Grid container size={12} margin={1} alignItems={"center"}>
 
