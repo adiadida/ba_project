@@ -9,6 +9,9 @@ import {testData} from "@/components/cmaa/TestData";
 import {StatisticsAccordion} from "@/components/cmaa/StatisticsAccordion";
 import {ClarificationInputs} from "@/components/clarificationConference/ClarificationInputs";
 import {Recommendations} from "@/components/recommendations/Recommendations";
+import {MetricsGrid} from "@/components/discussionMetrics/MetricsGrid";
+import {GenericAccordion} from "@/components/generics/GenericAccordion";
+import {Divider} from "@mui/material";
 
 
 export default function CAAPage() {
@@ -58,8 +61,8 @@ export default function CAAPage() {
     const handlePreferenceChange = (newPrefs: number[][]) => setEditedPrefs(newPrefs);
     const handleJudgementChange = (newJudgements: number[][][]) => setEditedJudgements(newJudgements);
 
-    // todo useEffect to rerender visuals + fix step counter: why no update?
-    // --- getting updated data and triggering cmaa
+    // todo fix?????
+    // --- getting updated data and triggering cmaa once (noice)
     const handleResend = () => {
 
         // Rank Acceptability Counter und Indices zurücksetzen
@@ -532,7 +535,7 @@ export default function CAAPage() {
             return;
         }
 
-        // update counter for preference of winner from simulated instance
+        // --- update counter for preference of winner from simulated instance
         for (let crit = 0; crit < prefCircCounter[altWinner].length; crit++) { // [kriterienindex]
 
             for (let prefIdx = 0; prefIdx < prefCircCounter[altWinner][crit].length; prefIdx++) { // [bewertungsindex]
@@ -545,8 +548,9 @@ export default function CAAPage() {
 
         // set counter
         preferencesCircumstanceCounterRef.current = prefCircCounter;
+        //console.log(prefCircCounter);
 
-        // update counter for judgements of winner from simulated instance
+        // --- update counter for judgements of winner from simulated instance
         for (let crit = 0; crit < judgCircCounter[altWinner].length; crit++) { // [kriterienindex]
 
             for (let alt = 0; alt < judgCircCounter[altWinner][crit].length; alt++) { // [alternativenindex]
@@ -563,6 +567,8 @@ export default function CAAPage() {
 
         // set counter
         judgementsCircumstanceCounterRef.current = judgCircCounter;
+
+        console.log('set circ counter');
     }
 
     // --- Seeded RNG ---
@@ -694,6 +700,7 @@ export default function CAAPage() {
         setAlternativeWinner(winner);
         setChanceWinner(chance);
 
+        console.log('statistics');
     }
 
     function cMAA() {
@@ -702,6 +709,15 @@ export default function CAAPage() {
         if (Object.values(decisionMakerData).length === 0 || aggregatedJudgements.length === 0 || aggregatedPreferences.length === 0) {
             return;
         }
+
+        // counters to get conditions for rank 1 from instances
+        /*const prefInst = initializePreferencesAndCounter();
+         preferencesCircumstanceCounterRef.current = prefInst.prefCircCounter;
+
+         const judgInst = initializeJudgementsAndCounter();
+         judgementsCircumstanceCounterRef.current = judgInst.judgCircCounter;*/
+
+        console.log('cmaa')
 
         const kMonteCarlo = 10000;
         for (let k = 0; k < kMonteCarlo; k++) {
@@ -716,7 +732,7 @@ export default function CAAPage() {
 
         createStatistics(rankAcceptabilityCounter, kMonteCarlo);
         //console.log('rankAcceptabilityCounter ', rankAcceptabilityCounter);
-        //console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
+        console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
     }
 
     // for debugging purposes
@@ -766,207 +782,226 @@ export default function CAAPage() {
             //dPrefsRef.current = initializeDPrefs();
             //dJudgesRef.current = initializeDJudges();
 
+            console.log('cmaa useEffect')
+
             cMAA()
             //console.log('judg count', judgementsCircumstanceCounterRef.current);
             //console.log('pref count', preferencesCircumstanceCounterRef.current);
         }
-    }, [/*decisionMakerData,*/ aggregatedPreferences, aggregatedJudgements, preferencesMultiInputs, judgementsMultiInputs]);
-
+    }, [/*decisionMakerData, aggregatedPreferences, aggregatedJudgements,*/ preferencesMultiInputs, judgementsMultiInputs]);
+// these dependencies are OR triggers --> caused multiple countings - now it triggers cmaa, statistics etc, but statistics dont update at all??
 
     // --- Checks ---
     /** unit testing
      // 1. each sum of row of judgements from alternatives = r1 of that altWinner
      // 2. each sum of row of preferences from criteria = r1 of that altWinner
      // 3. rai: sum of sums of rows = sum of sums of cols = number of alternatives
+
+
+     // check if in range
+     const isBetween = (x: number, min: number, max: number) => {
+     return x >= min && x <= max;
+     };
+
+     function checkJudgements() {
+
+     const errorMargin = 0;
+     let checkSum = 0;
+     let judgCounterSum = 0;
+     // ! for error handling
+     const judgCircCounter = judgementsCircumstanceCounterRef.current!;
+
+     // error handling
+     if (judgCircCounter === null) {
+     return;
+     }
+
+     for (let altWinner = 0; altWinner < judgCircCounter.length; altWinner++) { // [a_i gewinne] // judgCircCounter[altWinner]
+
+     checkSum = rankAcceptabilityCounter[altWinner][0]; // rank 1 is in first col - rAC[alts][ranks]
+
+     for (let crit = 0; crit < judgCircCounter[altWinner].length; crit++) { // [kriterienindex] // judgCircCounter[altWinner][crit]
+
+     for (let alt = 0; alt < judgCircCounter[altWinner][crit].length; alt++) { // [alternativenindex] // judgCircCounter[altWinner][crit][alt]
+
+     // needs to be reset for the sum of judgements for each alternative
+     judgCounterSum = 0;
+
+     for (let judgeIdx = 0; judgeIdx < judgCircCounter[altWinner][crit][alt].length; judgeIdx++) { // [bewertungsindex] // judgCircCounter[altWinner][crit][alt][judgeIdx]
+     judgCounterSum += judgCircCounter[altWinner][crit][alt][judgeIdx];
+     }
+
+     if (!isBetween(checkSum, judgCounterSum - errorMargin, judgCounterSum + errorMargin)) {
+     console.log('Judgement Counter Check failed');
+     console.log('check sum ', checkSum, ' judg sum ', judgCounterSum);
+     }
+
+     }
+     }
+     }
+     }
+
+     function checkPreferences() {
+
+     const errorMargin = 0;
+     let checkSum = 0;
+     let prefCounterSum = 0;
+
+     // ! for error handling
+     const prefCircCounter = preferencesCircumstanceCounterRef.current!;
+
+     // error handling
+     if (prefCircCounter === null) {
+     return;
+     }
+
+     for (let altWinner = 0; altWinner < prefCircCounter.length; altWinner++) { // [a_i gewinne] // prefCircCounter[altWinner]
+
+     checkSum = rankAcceptabilityCounter[altWinner][0]; // rank 1 is in first col - rAC[alts][ranks]
+
+     for (let crit = 0; crit < prefCircCounter[altWinner].length; crit++) { // [kriterienindex] // prefCircCounter[altWinner][crit]
+
+     // needs to be reset for the sum of preferences for each criterion
+     prefCounterSum = 0;
+
+     for (let prefIdx = 0; prefIdx < prefCircCounter[altWinner][crit].length; prefIdx++) { // [bewertungsindex] // prefCircCounter[altWinner][crit][prefIdx]
+     prefCounterSum += prefCircCounter[altWinner][crit][prefIdx];
+     }
+
+     if (!isBetween(prefCounterSum, checkSum - errorMargin, checkSum + errorMargin)) {
+     console.log('Preference Counter Check failed');
+     console.log('check sum ', checkSum, ' prefCounte sum ', prefCounterSum);
+     }
+     }
+     }
+     }
+
+     function checkRAI() {
+
+     const numAlts = rankAcceptabilityIndices.length;
+
+     const errorMargin = 0.01;
+     const negMarginNumAlts = numAlts - errorMargin;
+     const posMarginNumAlts = numAlts + errorMargin;
+
+     let ranksSum = 0;
+     let altsSum = 0;
+
+     // sum up rows/alternatives
+     for (let alt = 0; alt < numAlts; alt++) {
+
+     let altSum = 0;
+     for (let rank = 0; rank < numAlts; rank++) {
+     altSum += rankAcceptabilityIndices[alt][rank];
+     altsSum += rankAcceptabilityIndices[alt][rank];
+     }
+     // each sum of row needs to be approx. 1
+     if (!isBetween(altSum, 1 - errorMargin, 1 + errorMargin) && altSum !== 0) {
+     console.log('RAI check failed');
+     console.log('alternative sum ', altSum)
+     }
+     }
+
+     // sum up columns/ranks
+     for (let rank = 0; rank < numAlts; rank++) {
+
+     for (let alt = 0; alt < numAlts; alt++) {
+     ranksSum += rankAcceptabilityIndices[alt][rank];
+     }
+     }
+
+     // error handling: case of only initialized matrix
+     if (altsSum === 0 && ranksSum === 0) {
+     return;
+     }
+
+     if (!isBetween(altsSum, negMarginNumAlts, posMarginNumAlts) || !isBetween(ranksSum, negMarginNumAlts, posMarginNumAlts)) {
+     console.log('RAI check failed');
+     console.log(numAlts, altsSum, ranksSum);
+     }
+     }
+
+     // unit testing
+     useEffect(() => {
+
+     // error handling - data structures need to be initialized
+     if (
+     preferencesMultiInputs.length > 0
+     && judgementsMultiInputs.length > 0
+     && rankAcceptabilityCounter.length > 0
+     && rankAcceptabilityIndices.length > 0
+     && preferencesCircumstanceCounterRef.current!.length > 0
+     && judgementsCircumstanceCounterRef.current!.length > 0
+     ) {
+     checkJudgements();
+     checkPreferences();
+     checkRAI();
+     }
+
+     }, [rankAcceptabilityCounter, preferencesCircumstanceCounterRef.current, judgementsCircumstanceCounterRef.current, rankAcceptabilityIndices])
+
      **/
-
-        // check if in range
-    const isBetween = (x: number, min: number, max: number) => {
-            return x >= min && x <= max;
-        };
-
-    function checkJudgements() {
-
-        const errorMargin = 0;
-        let checkSum = 0;
-        let judgCounterSum = 0;
-        // ! for error handling
-        const judgCircCounter = judgementsCircumstanceCounterRef.current!;
-
-        // error handling
-        if (judgCircCounter === null) {
-            return;
-        }
-
-        for (let altWinner = 0; altWinner < judgCircCounter.length; altWinner++) { // [a_i gewinne] // judgCircCounter[altWinner]
-
-            checkSum = rankAcceptabilityCounter[altWinner][0]; // rank 1 is in first col - rAC[alts][ranks]
-
-            for (let crit = 0; crit < judgCircCounter[altWinner].length; crit++) { // [kriterienindex] // judgCircCounter[altWinner][crit]
-
-                for (let alt = 0; alt < judgCircCounter[altWinner][crit].length; alt++) { // [alternativenindex] // judgCircCounter[altWinner][crit][alt]
-
-                    // needs to be reset for the sum of judgements for each alternative
-                    judgCounterSum = 0;
-
-                    for (let judgeIdx = 0; judgeIdx < judgCircCounter[altWinner][crit][alt].length; judgeIdx++) { // [bewertungsindex] // judgCircCounter[altWinner][crit][alt][judgeIdx]
-                        judgCounterSum += judgCircCounter[altWinner][crit][alt][judgeIdx];
-                    }
-
-                    if (!isBetween(checkSum, judgCounterSum - errorMargin, judgCounterSum + errorMargin)) {
-                        console.log('Judgement Counter Check failed');
-                        console.log('check sum ', checkSum, ' judg sum ', judgCounterSum);
-                    }
-
-                }
-            }
-        }
-    }
-
-    function checkPreferences() {
-
-        const errorMargin = 0;
-        let checkSum = 0;
-        let prefCounterSum = 0;
-
-        // ! for error handling
-        const prefCircCounter = preferencesCircumstanceCounterRef.current!;
-
-        // error handling
-        if (prefCircCounter === null) {
-            return;
-        }
-
-        for (let altWinner = 0; altWinner < prefCircCounter.length; altWinner++) { // [a_i gewinne] // prefCircCounter[altWinner]
-
-            checkSum = rankAcceptabilityCounter[altWinner][0]; // rank 1 is in first col - rAC[alts][ranks]
-
-            for (let crit = 0; crit < prefCircCounter[altWinner].length; crit++) { // [kriterienindex] // prefCircCounter[altWinner][crit]
-
-                // needs to be reset for the sum of preferences for each criterion
-                prefCounterSum = 0;
-
-                for (let prefIdx = 0; prefIdx < prefCircCounter[altWinner][crit].length; prefIdx++) { // [bewertungsindex] // prefCircCounter[altWinner][crit][prefIdx]
-                    prefCounterSum += prefCircCounter[altWinner][crit][prefIdx];
-                }
-
-                if (!isBetween(prefCounterSum, checkSum - errorMargin, checkSum + errorMargin)) {
-                    console.log('Preference Counter Check failed');
-                    console.log('check sum ', checkSum, ' prefCounte sum ', prefCounterSum);
-                }
-            }
-        }
-    }
-
-    function checkRAI() {
-
-        const numAlts = rankAcceptabilityIndices.length;
-
-        const errorMargin = 0.01;
-        const negMarginNumAlts = numAlts - errorMargin;
-        const posMarginNumAlts = numAlts + errorMargin;
-
-        let ranksSum = 0;
-        let altsSum = 0;
-
-        // sum up rows/alternatives
-        for (let alt = 0; alt < numAlts; alt++) {
-
-            let altSum = 0;
-            for (let rank = 0; rank < numAlts; rank++) {
-                altSum += rankAcceptabilityIndices[alt][rank];
-                altsSum += rankAcceptabilityIndices[alt][rank];
-            }
-            // each sum of row needs to be approx. 1
-            if (!isBetween(altSum, 1 - errorMargin, 1 + errorMargin) && altSum !== 0) {
-                console.log('RAI check failed');
-                console.log('alternative sum ', altSum)
-            }
-        }
-
-        // sum up columns/ranks
-        for (let rank = 0; rank < numAlts; rank++) {
-
-            for (let alt = 0; alt < numAlts; alt++) {
-                ranksSum += rankAcceptabilityIndices[alt][rank];
-            }
-        }
-
-        // error handling: case of only initialized matrix
-        if (altsSum === 0 && ranksSum === 0) {
-            return;
-        }
-
-        if (!isBetween(altsSum, negMarginNumAlts, posMarginNumAlts) || !isBetween(ranksSum, negMarginNumAlts, posMarginNumAlts)) {
-            console.log('RAI check failed');
-            console.log(numAlts, altsSum, ranksSum);
-        }
-    }
-
-    // unit testing
-    useEffect(() => {
-
-        // error handling - data structures need to be initialized
-        if (
-            preferencesMultiInputs.length > 0
-            && judgementsMultiInputs.length > 0
-            && rankAcceptabilityCounter.length > 0
-            && rankAcceptabilityIndices.length > 0
-            && preferencesCircumstanceCounterRef.current!.length > 0
-            && judgementsCircumstanceCounterRef.current!.length > 0
-        ) {
-            checkJudgements();
-            checkPreferences();
-            checkRAI();
-        }
-
-    }, [rankAcceptabilityCounter, preferencesCircumstanceCounterRef.current, judgementsCircumstanceCounterRef.current, rankAcceptabilityIndices])
-
     // --- UI Rendering ---
     return (
         <Grid container spacing={2} alignItems="center">
             <GenericHeader title="Gruppenentscheidung - Dashboard"/>
 
-            <Grid container padding={4}>
-                Visualisierungen
-            </Grid>
-
-            {aggregatedJudgements && aggregatedJudgements.length > 0 && aggregatedPreferences && aggregatedPreferences.length > 0 && (
-                <Recommendations
-                    aggPrefs={aggregatedPreferences}
-                    aggJudgements={aggregatedJudgements}
-                />
-            )}
-
-            {judgementsMultiInputs.length > 0 && preferencesMultiInputs.length > 0 && (
-                <Grid container size={12}>
-                    <ClarificationInputs conferenceCounter={stepCounter}
-                                         alternativeWinner={alternativeWinner} chanceWinner={chanceWinner}
-                                         handleResend={handleResend}
-                                         judgementMultiInputs={judgementsMultiInputs}
-                                         onJudgementChange={handleJudgementChange}
-                                         preferenceMultiInputs={preferencesMultiInputs}
-                                         onPreferenceChange={handlePreferenceChange}
-                    />
-                </Grid>
-            )}
-
-            <Grid container size={12} margin={1} alignItems={"center"}>
-
-                {
-                    preferencesCircumstanceCounterRef.current &&
-                    preferencesCircumstanceCounterRef.current.length > 0 &&
-
-                    judgementsCircumstanceCounterRef.current &&
-                    judgementsCircumstanceCounterRef.current.length > 0 &&
+            <Grid container margin={4}>
+                {rankAcceptabilityIndices.length > 0 &&
                     (
-                        <StatisticsAccordion rankAcceptabilityIndices={rankAcceptabilityIndices}
-                                             rankAcceptabilityCounter={rankAcceptabilityCounter}
-                                             preferencesCircumstanceCounterRef={preferencesCircumstanceCounterRef.current!}
-                                             preferencesMultiInputs={preferencesMultiInputs}
-                                             judgementsCircumstanceCounterRef={judgementsCircumstanceCounterRef.current!}
-                                             judgementsMultiInputs={judgementsMultiInputs}/>
+                        <Grid container size={12}>
+                            <MetricsGrid rankAcceptabilityIndices={rankAcceptabilityIndices}
+                                         conferenceCounter={stepCounter}
+                                         alternativeWinner={alternativeWinner} chanceWinner={chanceWinner}/>
+                        </Grid>
+
                     )}
+
+                {aggregatedJudgements && aggregatedJudgements.length > 0 && aggregatedPreferences && aggregatedPreferences.length > 0 && (
+                    <Recommendations
+                        aggPrefs={aggregatedPreferences}
+                        aggJudgements={aggregatedJudgements}
+                    />
+                )}
+
+                <Grid container size={12} margin={1} alignItems={"center"}>
+                {/*todo check why alternativeWinner and chanceWinner isnt always right*/}
+                {judgementsMultiInputs.length > 0 && preferencesMultiInputs.length > 0 && (
+
+                    <GenericAccordion title={'Schritt 2: Ergebnis der Konflikt-Klärung festhalten'} child={
+                        <Grid container size={12}>
+                            <ClarificationInputs conferenceCounter={stepCounter}
+                                                 alternativeWinner={alternativeWinner} chanceWinner={chanceWinner}
+                                                 handleResend={handleResend}
+                                                 judgementMultiInputs={judgementsMultiInputs}
+                                                 onJudgementChange={handleJudgementChange}
+                                                 preferenceMultiInputs={preferencesMultiInputs}
+                                                 onPreferenceChange={handlePreferenceChange}
+                            />
+                        </Grid>}
+                    />
+
+                )}
+                    </Grid>
+
+                <Grid container size={12} margin={1} alignItems={"center"}>
+
+                    {
+                        preferencesCircumstanceCounterRef.current &&
+                        preferencesCircumstanceCounterRef.current.length > 0 &&
+
+                        judgementsCircumstanceCounterRef.current &&
+                        judgementsCircumstanceCounterRef.current.length > 0 &&
+                        (
+                            <StatisticsAccordion rankAcceptabilityIndices={rankAcceptabilityIndices}
+                                                 rankAcceptabilityCounter={rankAcceptabilityCounter}
+                                                 preferencesCircumstanceCounterRef={preferencesCircumstanceCounterRef.current!}
+                                                 preferencesMultiInputs={preferencesMultiInputs}
+                                                 judgementsCircumstanceCounterRef={judgementsCircumstanceCounterRef.current!}
+                                                 judgementsMultiInputs={judgementsMultiInputs}/>
+                        )}
+                </Grid>
+
             </Grid>
         </Grid>
     );
