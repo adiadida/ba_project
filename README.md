@@ -1,4 +1,6 @@
 project contains
-- swa algorithm
+- saw algorithm
 - cmaa algorithm
-- vis
+- visualizations of cmaa statistics
+- visualizations of discussion metrics
+- conflict recommendations
