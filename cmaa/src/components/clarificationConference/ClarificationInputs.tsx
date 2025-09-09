@@ -18,7 +18,9 @@ export const ClarificationInputs = ({
         <Grid container size={12} padding={4} spacing={2}>
 
             <Grid container size={12}>
-                <Typography>Schritt 2: Ergebnis der Konflikt-Klärung festhalten</Typography>
+                <Typography variant={"body2"}>
+                    Es muss mindestens eine Bewertung pro Konflikt erhalten bleiben
+                </Typography>
             </Grid>
             <Grid container size={12} spacing={2}>
                 <Grid container size={4}>
