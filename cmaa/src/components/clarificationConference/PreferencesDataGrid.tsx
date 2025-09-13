@@ -20,6 +20,7 @@ export const PreferencesDataGrid = ({preferenceMultiInputs, onPreferenceChange}:
                 }
         }
 
+
         onPreferenceChange(updated);
         return newRow;
     };

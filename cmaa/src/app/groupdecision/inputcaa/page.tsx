@@ -11,13 +11,12 @@ import {ClarificationInputs} from "@/components/clarificationConference/Clarific
 import {Recommendations} from "@/components/recommendations/Recommendations";
 import {MetricsGrid} from "@/components/discussionMetrics/MetricsGrid";
 import {GenericAccordion} from "@/components/generics/GenericAccordion";
-import {Divider} from "@mui/material";
+import {SearchParams} from "next/dist/server/request/search-params";
 
 
 export default function CAAPage() {
 
-    // to get and store data
-    const [decisionMakerData, setDecisionMakerData] = useState<{ [oid: string]: any }>({});
+    // to get data from URL
     const searchParams = useSearchParams()
 
     // State to hold aggregated preferences
@@ -130,27 +129,24 @@ export default function CAAPage() {
 
     }, [searchParams]);
 
-    // function that generates aggregations of decisionMakerData
-    // Run aggregation whenever decisionMakerData updates
-    // doesn't run in case: setting new MultiInputs from Input DataGrids
-    useEffect(() => {
-        const aggPrefs: Set<number>[] = aggPreferences(decisionMakerData);
-        setAggregatedPreferences(aggPrefs);
+    // function that generates aggregations of decisionMakerData and initializes matrices for rank acceptability
+    const initPageStateData = (decisionMakerData: { [oid: string]: any }): {
+        aggregatedPreferences: Set<number>[],
+        aggregatedJudgements: Set<number>[][],
+        rankAcceptabilityCounter: number[][],
+        rankAcceptabilityIndices: number[][]
+    } => {
+        const aggPrefs: Set<number>[] = getAggregatedPreferences(decisionMakerData);
         //console.log('Aggregated Preferences:', aggPrefs);
 
-        const aggJudgs: Set<number>[][] = aggJudgements(decisionMakerData);
-        setAggregatedJudgements(aggJudgs);
+        const aggJudgs: Set<number>[][] = getAggregatedJudgements(decisionMakerData);
         //console.log('Aggregated Judgements:', aggJudgs);
 
         const initialRACounter: number [][] = initializeRankAcceptabilityMatrix(decisionMakerData);
-        setRankAcceptabilityCounter(initialRACounter);
         //console.log('Initial RAC:', initialRACounter);
 
         const initialRAIndices: number [][] = initializeRankAcceptabilityMatrix(decisionMakerData);
-        setRankAcceptabilityIndices(initialRAIndices);
-        //console.log('Initial RAI:', initialRACounter);
-
-    }, [decisionMakerData]);
+        //(initialRAIndices);
 
         return {
             aggregatedPreferences: aggPrefs,
@@ -249,10 +245,6 @@ export default function CAAPage() {
         return Math.random(); // fallback to Math.random() as a safe default
     };
 
-    React.useEffect(() => {
-        initializeGenerator(/*'4321'*/); // CHANGE SEED HERE
-    }, []);
-
     // --- Generate Random Instance ---
     const generateRandomInstance = (aggrPreferences: Set<number>[], aggrJudgements: Set<number>[][], seed?: string) => {
         // Initialize generator if seed provided (rng already initialized otherwise)
@@ -310,61 +302,24 @@ export default function CAAPage() {
         return {preferences, judgements};
     }
 
-    const createStatistics = (rankAcceptabilityCounter: number[][], kCM: number) => {
-        const counterMatrix = rankAcceptabilityCounter;
-        const rAIMatrix = initializeRankAcceptabilityMatrix(decisionMakerData);
-
-        // iterate over 1 col and rows + sum up number of instances
-        /*let sum = 0;
-        for (let j = 0; j < counterMatrix[0].length; j++) {
-            sum += counterMatrix[0][j];
-        }
-        */
-
-        // normalize counters with sum of instances
-        for (let i = 0; i < rAIMatrix.length; i++) {
-            for (let j = 0; j < rAIMatrix[i].length; j++) {
-                rAIMatrix[i][j] = counterMatrix[i][j] / kCM;
-            }
-        }
-
-        //console.log('normalized: ', rAIMatrix)
-        setRankAcceptabilityIndices(rAIMatrix);
-
-        // set winner and chance of winner (needed for user feedback) in ExitModal
-        const getWinnerAndChance = () => {
-
-            var winner: number = -1;
-            var chance: number = -1;
-
-            const rankOne = rAIMatrix[0]
-
-            for (let i = 0; i < rankOne.length; i++) {
-                if (chance < rankOne[i]) {
-                    chance = rankOne[i];
-                    winner = i + 1;
-                }
-            }
-
-            chance = Math.round(chance * 100);
-            return {winner, chance};
-        }
-
-        const {winner, chance} = getWinnerAndChance();
-
-        setAlternativeWinner(winner);
-        setChanceWinner(chance);
-
-        console.log('statistics');
-    }
-
-    function cMAA() {
-
-        // error handling
-        if (Object.values(decisionMakerData).length === 0 || aggregatedJudgements.length === 0 || aggregatedPreferences.length === 0) {
-            return;
-        }
-
+    // combinatorial multicriteria acceptability analysis
+    function cMAA(aggregatedJudgements: Set<number>[][],
+                  aggregatedPreferences: Set<number>[],
+                  _rankAcceptabilityCounter: number[][],
+                  _rankAcceptabilityIndices: number[][],
+                  _preferencesCircumstanceCounter: number[][][],
+                  _judgementsCircumstanceCounter: number[][][][],
+                  preferencesMultiInputs: number[][],
+                  judgementsMultiInputs: number[][][],
+                  decisionMakerData: { [o: string]: any }
+    ): {
+        winner: number,
+        chance: number,
+        rankAcceptabilityIndices: number[][],
+        preferencesCircumstanceCounter: number[][][],
+        judgementsCircumstanceCounter: number[][][][],
+        rankAcceptabilityCounter: number[][]
+    } {
         // counters to get conditions for rank 1 from instances
         let preferencesCircumstanceCounter = _preferencesCircumstanceCounter;
         let judgementsCircumstanceCounter = _judgementsCircumstanceCounter;
@@ -374,7 +329,19 @@ export default function CAAPage() {
         for (let k = 0; k < kMonteCarlo; k++) {
             const instance = generateRandomInstance(aggregatedPreferences, aggregatedJudgements);
             const ranks = generateRanking(instance.preferences, instance.judgements);
-            updateCounters(instance.preferences, instance.judgements, ranks);
+            ({
+                preferencesCircumstanceCounter,
+                judgementsCircumstanceCounter,
+                rankAcceptabilityCounter
+            } = updateCounterMatrices(
+                instance.preferences,
+                instance.judgements,
+                ranks,
+                preferencesCircumstanceCounter,
+                judgementsCircumstanceCounter,
+                rankAcceptabilityCounter,
+                preferencesMultiInputs,
+                judgementsMultiInputs));
         }
 
         // for debugging
@@ -387,7 +354,16 @@ export default function CAAPage() {
             rankAcceptabilityIndices
         } = createStatistics(rankAcceptabilityCounter, kMonteCarlo, decisionMakerData);
         //console.log('rankAcceptabilityCounter ', rankAcceptabilityCounter);
-        console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
+        //console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
+
+        return {
+            winner,
+            chance,
+            rankAcceptabilityIndices,
+            preferencesCircumstanceCounter,
+            judgementsCircumstanceCounter,
+            rankAcceptabilityCounter
+        };
     }
 
     // for debugging purposes
@@ -416,35 +392,6 @@ export default function CAAPage() {
         }
         return dJudges;
     }
-
-    // execute CMAA algorithm when all input parameters are properly set
-    useEffect(() => {
-        if ( // check if necessary data defined
-            Object.keys(decisionMakerData) !== undefined &&
-            aggregatedPreferences !== undefined &&
-            aggregatedJudgements !== undefined &&
-            aggregatedJudgements[0] !== undefined &&
-            preferencesMultiInputs !== undefined &&
-            judgementsMultiInputs !== undefined &&
-            preferencesMultiInputs[0] !== undefined &&
-            judgementsMultiInputs[0] !== undefined
-            && preferencesMultiInputs.length > 0
-            && judgementsMultiInputs.length > 0
-
-        ) {
-
-            //debugging
-            //dPrefsRef.current = initializeDPrefs();
-            //dJudgesRef.current = initializeDJudges();
-
-            console.log('cmaa useEffect')
-
-            cMAA()
-            //console.log('judg count', judgementsCircumstanceCounterRef.current);
-            //console.log('pref count', preferencesCircumstanceCounterRef.current);
-        }
-    }, [/*decisionMakerData, aggregatedPreferences, aggregatedJudgements,*/ preferencesMultiInputs, judgementsMultiInputs]);
-// these dependencies are OR triggers --> caused multiple countings - now it triggers cmaa, statistics etc, but statistics dont update at all??
 
     // --- Checks ---
     /** unit testing
@@ -620,24 +567,24 @@ export default function CAAPage() {
                 )}
 
                 <Grid container size={12} margin={1} alignItems={"center"}>
-                {/*todo check why alternativeWinner and chanceWinner isnt always right*/}
-                {judgementsMultiInputs.length > 0 && preferencesMultiInputs.length > 0 && (
+                    {/*todo check why alternativeWinner and chanceWinner isnt always right*/}
+                    {judgementsMultiInputs.length > 0 && preferencesMultiInputs.length > 0 && (
 
-                    <GenericAccordion title={'Schritt 2: Ergebnis der Konflikt-Klärung festhalten'} child={
-                        <Grid container size={12}>
-                            <ClarificationInputs conferenceCounter={stepCounter}
-                                                 alternativeWinner={alternativeWinner} chanceWinner={chanceWinner}
-                                                 handleResend={handleResend}
-                                                 judgementMultiInputs={judgementsMultiInputs}
-                                                 onJudgementChange={handleJudgementChange}
-                                                 preferenceMultiInputs={preferencesMultiInputs}
-                                                 onPreferenceChange={handlePreferenceChange}
-                            />
-                        </Grid>}
-                    />
+                        <GenericAccordion title={'Schritt 2: Ergebnis der Konflikt-Klärung festhalten'} child={
+                            <Grid container size={12}>
+                                <ClarificationInputs conferenceCounter={stepCounter}
+                                                     alternativeWinner={alternativeWinner} chanceWinner={chanceWinner}
+                                                     handleResend={handleResend}
+                                                     judgementMultiInputs={judgementsMultiInputs}
+                                                     onJudgementChange={handleJudgementChange}
+                                                     preferenceMultiInputs={preferencesMultiInputs}
+                                                     onPreferenceChange={handlePreferenceChange}
+                                />
+                            </Grid>}
+                        />
 
-                )}
-                    </Grid>
+                    )}
+                </Grid>
 
                 <Grid container size={12} margin={1} alignItems={"center"}>
 
@@ -660,4 +607,600 @@ export default function CAAPage() {
             </Grid>
         </Grid>
     );
+}
+
+function getDecisionMakerData(searchParams: SearchParams): {
+    decisionMakerData: { [oid: string]: any }
+} {
+    // let decisionMakerData: { [oid: string]: any };
+    // parse data from URL params
+    const newData: { [dmId: string]: any } = {};
+
+    // newData[dmId] = {
+    //   criteria: parsedData.criteria,
+    //   weights: parsedData.weights,
+    //   alt1 ... altn // other processed data
+    // };
+
+    // multiple dmIds or a single dmId parameter with multiple values
+    /* example data:
+    * inputcaa?data={"1"%3A[{"id"%3A0%2C"criteria"%3A"criterion 1"%2C"weight"%3A1%2C"alt1"%3A2%2C"alt2"%3A5%2C"alt3"%3A1}%2C{"id"%3A1%2C"criteria"%3A"criterion 2"%2C"weight"%3A5%2C"alt1"%3A3%2C"alt2"%3A4%2C"alt3"%3A2}%2C{"id"%3A2%2C"criteria"%3A"criterion 3"%2C"weight"%3A2%2C"alt1"%3A4%2C"alt2"%3A3%2C"alt3"%3A3}%2C{"id"%3A1000%2C"criteria"%3A"weighted sum"%2C"alt1"%3A25%2C"alt2"%3A31%2C"alt3"%3A17%2C"alt4"%3A0%2C"alt5"%3A0}%2C{"id"%3A1001%2C"criteria"%3A"rank"%2C"alt1"%3A2%2C"alt2"%3A1%2C"alt3"%3A3%2C"alt4"%3A4%2C"alt5"%3A4}]%2C"2"%3A[{"id"%3A0%2C"criteria"%3A"criterion 1"%2C"weight"%3A4%2C"alt1"%3A5%2C"alt2"%3A1%2C"alt3"%3A3}%2C{"id"%3A1%2C"criteria"%3A"criterion 2"%2C"weight"%3A2%2C"alt1"%3A1%2C"alt2"%3A2%2C"alt3"%3A2}%2C{"id"%3A2%2C"criteria"%3A"criterion 3"%2C"weight"%3A3%2C"alt1"%3A2%2C"alt2"%3A5%2C"alt3"%3A1}%2C{"id"%3A1000%2C"criteria"%3A"weighted sum"%2C"alt1"%3A28%2C"alt2"%3A23%2C"alt3"%3A19%2C"alt4"%3A0%2C"alt5"%3A0}%2C{"id"%3A1001%2C"criteria"%3A"rank"%2C"alt1"%3A1%2C"alt2"%3A2%2C"alt3"%3A3%2C"alt4"%3A4%2C"alt5"%3A4}]}
+    * */
+    searchParams.forEach((value, key) => {
+        try {
+            // Decode the URL-encoded string
+            const decodedString = decodeURIComponent(value);
+            // Parse the JSON string
+            const parsedData = JSON.parse(decodedString);
+
+            //key used as dmId
+            // Generate data object for this key
+            if (typeof parsedData === 'object' && parsedData !== null) {
+                newData[key] = parsedData;
+            } else {
+                console.warn(`Parsed data for ${key} is not an object.`);
+            }
+        } catch (error) {
+            console.error(`Error parsing data for ${key}:`, error);
+        }
+    });
+
+    if (Object.keys(newData).length === 0) {
+        // Use testData if no data in URL
+        const fallbackData = testData(); // get the 'data' object from testData
+        //console.log('test Data:', fallbackData);
+        return fallbackData;
+    } else {
+        //from URL generated data
+        return newData;
+    }
+}
+
+// interface row object
+interface Row {
+    id: number;
+    criteria: string;
+    weight: number | undefined;
+
+    [p: string]: any;
+}
+
+function getAggregatedPreferences(data: { [oid: string]: any }): {
+    // aggPreferencesArray ... array for each criterion m  = a set of unique values from decisionMaker preferences
+    aggPreferences: Set<number>[]
+} {
+
+    // array of Set<number> = unique
+    let aggPreferences: Set<number>[] = [];
+
+    // check if data isEmpty -  data is object with oid --> that object then contains object arrays of decision maker data
+    const dmData = Object.values(data);
+
+    // error handling
+    if (dmData.length === 0) {
+        return aggPreferences;
+    }
+
+    // from the first decision maker - first array of row objects
+    const firstDM: Row[] = dmData[0][1];
+
+    // Extract criteria keys
+    const criteriaArray: string[] = []; // Set has unique values
+    firstDM.forEach((object: Row) => {
+        if (object.id !== 1000 && object.id !== 1001) {
+            criteriaArray.push(object.criteria);
+        }
+    })
+
+    // Initialize aggPreferences
+    criteriaArray.forEach(() => {
+        aggPreferences.push(new Set<number>)
+    });
+
+    const decisionMakers = dmData[0]; // contains object array for each decision maker
+
+    for (const dmID of Object.keys(decisionMakers)) { // iterate over decision makers
+        const decisionMaker = decisionMakers[dmID];
+
+        // set weight for each criterion
+        for (let row = 0; row < aggPreferences.length; row++) { // iterate over rows
+            const decisionRow = decisionMaker[row];
+            if (!decisionRow) continue; // Skip if decisionRow is undefined or null
+
+            if (
+                criteriaArray[row] === decisionRow.criteria &&
+                typeof decisionRow.weight === 'number'
+            ) {
+                // add preference weight to set
+                aggPreferences[row].add(decisionRow.weight);
+            }
+
+        }
+    }
+
+    return aggPreferences;
+    /*
+     returns with example data:
+     [
+        0: Set [1,4] // is "criterion 1"
+        1: Set [5,2] // is "criterion 2"
+        2: Set [2,3] // is "criterion 2"
+    ]
+    */
+}
+
+function getAggregatedJudgements(data: { [oid: string]: any }): {
+    // aggJudgementMatrix ... Matrix for each criterion m and for each alternative n = a set of unique values from decisionMaker judgements
+    aggJudgements: Set<number>[][]
+} {
+    // matrix or 2-dimensional array of Set<number> = unique
+    let aggJudgements: Set<number>[][] = [];
+    // check if data isEmpty -  data is object with oid --> that object then contains object arrays of decision maker data
+    const dmData = Object.values(data);
+
+    // error handling
+    if (dmData.length === 0) {
+        return aggJudgements;
+    }
+
+    // from the first decision maker - first array of row objects
+    const firstDM: Row[] = dmData[0][1];
+    // get criteria
+    const criteriaArray: string[] = [];
+    firstDM.forEach((object: Row) => {
+        if (object.id !== 1000 && object.id !== 1001) {
+            criteriaArray.push(object.criteria);
+        }
+    })
+    // from first row of first decision maker
+    const firstRow: Row = firstDM[0];
+    // get alternatives
+    const alternativesArray: string[] = [];
+    // Extract keys starting with 'alt'
+    Object.keys(firstRow).forEach((key) => {
+        if (key.startsWith('alt')) {
+            alternativesArray.push(key);
+        }
+    });
+
+    const criteriaCount = criteriaArray.length;
+    const alternativesCount = alternativesArray.length;
+
+    // Initialize the array with empty sets
+    for (let row = 0; row < criteriaCount; row++) {
+        aggJudgements[row] = [];
+        for (let col = 0; col < alternativesCount; col++) {
+            aggJudgements[row][col] = new Set<number>();
+        }
+    }
+
+    const decisionMakers = dmData[0]; // contains an object array for each decision maker
+
+    for (const dmID of Object.keys(decisionMakers)) { // iterate over decision makers
+        const decisionMaker = decisionMakers[dmID];
+
+        // set weight for each criterion
+        for (let row = 0; row < criteriaCount; row++) { // iterate over rows = criteria
+            const decisionRow = decisionMaker[row];
+
+            for (let col = 0; col < alternativesCount; col++) { // iterate over cols = alternatives
+                if (
+                    criteriaArray[row] === decisionRow.criteria && alternativesArray[col] !== undefined
+                ) {
+                    const altkey: string = alternativesArray[col];
+                    aggJudgements[row][col].add(decisionRow[altkey])
+                }
+            }
+
+        }
+    }
+
+    return aggJudgements;
+
+}
+
+function getMultiData(aggregatedPreferences: Set<number>[], aggregatedJudgements: Set<number>[][]): {
+    preferencesMultiInputs: number[][],
+    judgementsMultiInputs: number[][][]
+} {
+    const preferencesMultiInputs = initializeMultiPreferences(aggregatedPreferences);
+    const judgementsMultiInputs = initializeMultiJudgements(aggregatedJudgements);
+
+    return {preferencesMultiInputs, judgementsMultiInputs};
+}
+
+function initializeMultiPreferences(aggregatedPreferences: Set<number>[]): {
+    preferencesMultiInputs: number[][]
+} {
+    // [criterion] [preference]
+    let preferencesInputs: number[][] = [];
+
+    for (let crit = 0; crit < aggregatedPreferences.length; crit++) {
+        const prefs = Array.from(aggregatedPreferences[crit]).sort(); // convert Set into sorted array
+        preferencesInputs[crit] = [];
+
+        for (let prefIdx = 0; prefIdx < prefs.length; prefIdx++) {
+            preferencesInputs[crit][prefIdx] = prefs[prefIdx];
+        }
+    }
+
+    return preferencesInputs;
+}
+
+function initializeMultiJudgements(aggregatedJudgements: Set<number>[][]): {
+    judgementsMultiInputs: number[][][]
+} {
+    // [criterion][alternative][judgement]
+    let judgementsInputs: number[][][] = [];
+
+    for (let crit = 0; crit < aggregatedJudgements.length; crit++) {
+        judgementsInputs[crit] = [];
+        for (let alt = 0; alt < aggregatedJudgements[crit].length; alt++) {
+            judgementsInputs[crit][alt] = [];
+
+            const judgs = Array.from(aggregatedJudgements[crit][alt]).sort(); // convert set into sorted array
+            judgementsInputs[crit][alt] = judgs;
+        }
+    }
+
+    return judgementsInputs;
+}
+
+function reduceMultiPreferences(editedPrefs: number[][]): {
+    aggregatedPreferences: Set<number>[]
+} {
+    // build aggregated preferences by reducing current MultiInputs
+
+    const reducedMultiPrefs: Set<number>[] = [];
+    for (let i = 0; i < editedPrefs.length; i++) {
+        reducedMultiPrefs[i] = new Set<number>();
+        for (let j = 0; j < editedPrefs[i].length; j++) {
+            if (
+                editedPrefs[i][j] !== undefined &&
+                !Number.isNaN(editedPrefs[i][j])
+            ) {
+                reducedMultiPrefs[i].add(editedPrefs[i][j]);
+            }
+        }
+    }
+    return reducedMultiPrefs;
+}
+
+function reduceMultiJudgements(editedJudgements: number[][][]): {
+    aggregatedJudgements: Set<number>[][]
+} {
+    // build aggregated judgements by reducing current MultiInputs
+
+    const reducedMultiJudgements: Set<number>[][] = [];
+    for (let i = 0; i < editedJudgements.length; i++) {
+        reducedMultiJudgements[i] = [];
+        for (let j = 0; j < editedJudgements[i].length; j++) {
+            reducedMultiJudgements[i][j] = new Set<number>();
+            for (let k = 0; k < editedJudgements[i][j].length; k++) {
+                if (
+                    editedJudgements[i][j][k] !== undefined &&
+                    !Number.isNaN(editedJudgements[i][j][k])
+                ) {
+                    reducedMultiJudgements[i][j].add(editedJudgements[i][j][k]);
+                }
+            }
+        }
+    }
+    return reducedMultiJudgements;
+}
+
+function initializeRankAcceptabilityMatrix(data: { [oid: string]: any }): {
+    rankAcceptabilityMatrix: number[][]
+} {
+    // needed for statistics -> rank acceptability counter + indices
+    // rows are implicitly a1...ai alternatives and cols are implicitly r1 ... rj ranks
+    let rankAcceptabilityMatrix: number[][] = [];
+
+    // check if data isEmpty -  data is object with oid --> that object then contains object arrays of decision maker data
+    const dmData = Object.values(data);
+
+    // error handling
+    if (dmData.length === 0) {
+        return rankAcceptabilityMatrix;
+    }
+    const firstRow: Row = dmData[0][1][0];
+    const alternativesArray: string[] = [];
+    // Extract keys starting with 'alt'
+    Object.keys(firstRow).forEach((key) => {
+        if (key.startsWith('alt')) {
+            alternativesArray.push(key);
+        }
+    });
+
+    // Matrix is ixj with i=j... number of alternatives
+    for (let i = 0; i < alternativesArray.length; i++) {
+        rankAcceptabilityMatrix[i] = [];
+        for (let j = 0; j < alternativesArray.length; j++) {
+            rankAcceptabilityMatrix[i][j] = 0;
+        }
+    }
+
+    return rankAcceptabilityMatrix;
+}
+
+function getInitialCircCounters(aggregatedPreferences: Set<number>[], aggregatedJudgements: Set<number>[][]): {
+    preferencesCircumstanceCounter: number[][][],
+    judgementsCircumstanceCounter: number[][][][]
+} {
+    const preferencesCircumstanceCounter = initializePreferencesCircumstanceCounter(aggregatedPreferences, aggregatedJudgements);
+    const judgementsCircumstanceCounter = initializeJudgementsCircumstanceCounter(aggregatedJudgements);
+
+
+    return {preferencesCircumstanceCounter, judgementsCircumstanceCounter};
+}
+
+function initializePreferencesCircumstanceCounter(aggregatedPreferences: Set<number>[], aggregatedJudgements: Set<number>[][]): {
+    prefCircCounter: number[][][]
+} {
+    // initialize Counter
+    let prefCircCounter: number[][][] = [];
+
+    const numAlts = aggregatedJudgements[0].length; // information only in judgements
+
+    for (let altWinner = 0; altWinner < numAlts; altWinner++) { // [a_i gewinne]
+
+        prefCircCounter[altWinner] = []
+
+        for (let crit = 0; crit < aggregatedPreferences.length; crit++) { // [kriterienindex]
+            prefCircCounter[altWinner][crit] = [];
+
+            const numPrefs = Array.from(aggregatedPreferences[crit]).length ?? 1;
+            for (let prefIdx = 0; prefIdx < numPrefs; prefIdx++) { // [bewertungsindex]
+                prefCircCounter[altWinner][crit][prefIdx] = 0;
+            }
+        }
+    }
+    return prefCircCounter;
+}
+
+function initializeJudgementsCircumstanceCounter(aggregatedJudgements: Set<number>[][]): {
+    judgCircCounter: number[][][][]
+} {
+    // initialize Counter
+    let judgCircCounter: number[][][][] = [];
+
+    const numAlts = aggregatedJudgements[0].length;
+    const numCrits = aggregatedJudgements.length;
+
+    for (let altWinner = 0; altWinner < numAlts; altWinner++) { // [a_i gewinne]
+
+        judgCircCounter[altWinner] = [];
+
+        for (let crit = 0; crit < numCrits; crit++) { // [kriterienindex]
+            judgCircCounter[altWinner][crit] = [];
+
+            for (let alt = 0; alt < numAlts; alt++) { // [alternativenindex]
+                judgCircCounter[altWinner][crit][alt] = [];
+
+                const numJudgements = aggregatedJudgements[crit][alt].size;
+                for (let judgeIdx = 0; judgeIdx < numJudgements; judgeIdx++) { // [bewertungsindex]
+
+                    judgCircCounter[altWinner][crit][alt][judgeIdx] = 0;
+                }
+            }
+        }
+    }
+    return judgCircCounter;
+}
+
+/**
+ * Simple additive weighting solver: returns weighted sums = performances of each alternative
+ */
+function generatePerformances(preferences: number[], judgements: number[][]): {
+    performances: number[]
+} {
+    const performances: number[] = [];
+
+    // getting number of alternatives from first col
+    const numberAlts = judgements[0]?.length ?? 0; // assuming all criteria arrays are of same length
+    const numberCrits = judgements?.length ?? 0;
+
+    // iterate over cols = alternatives
+    for (let alternative = 0; alternative < numberAlts; alternative++) {
+        let sum = 0;
+        // weighted sum for each criterion
+        for (let criterion = 0; criterion < numberCrits; criterion++) {
+            sum += judgements[criterion][alternative] * preferences[criterion];
+        }
+        performances[alternative] = sum;
+    }
+
+    return performances;
+}
+
+/**
+ * Generate ranking based on weighted sum = performance of alternative
+ * highest performance ... rank 1
+ */
+function generateRanking(preferences: number[], judgements: number [][]): {
+    altsByRank: number[]
+} {
+
+    if (preferences.length === 0 || judgements.length === 0) {
+        return [];
+    }
+
+    // get performances of every alternative
+    const performances: number[] = generatePerformances(preferences, judgements);
+    //console.log('weighted sums: ', performances);
+
+    // Create an array of alternatives with their performances
+    const alternatives = performances.map((performance, index) => ({index, performance}));
+
+    // Sort alternatives in descending order of performance
+    alternatives.sort((a, b) => b.performance - a.performance);
+
+    // Extract sorted alternative indices as ranking
+    const rankings = alternatives.map(alternative => alternative.index + 1);
+    //console.log('rankings ', rankings);
+
+    return rankings;
+
+}
+
+function updateCounterMatrices(preferences: number[],
+                               judgements: number[][],
+                               altsByRank: number[],
+                               preferencesCircumstanceCounter: number[][][],
+                               judgementsCircumstanceCounter: number[][][][],
+                               rankAcceptabilityCounter: number[][],
+                               preferencesMultiInputs: number[][],
+                               judgementsMultiInputs: number[][][]): {
+    rankAcceptabilityCounter: number[][],
+    preferencesCircumstanceCounter: number[][][],
+    judgementsCircumstanceCounter: number[][][][]
+} {
+
+    // error handling
+    if (preferencesCircumstanceCounter === null || judgementsCircumstanceCounter === null || rankAcceptabilityCounter === null) {
+        console.log('Counters not initialized');
+        return;
+    }
+
+    // --- update counter for rank of alternatives of simulated instance
+    const rankAccsCounter = updateRankAcceptabilityCounter(altsByRank, rankAcceptabilityCounter)
+
+    // rank 1 is at index 0 --> altWinner+1 is in altsByRank[0] --> that is the winner of instance
+    const altWinner = altsByRank[0] - 1; // altWinner is correctly initialised with the index of the winner alternative
+
+    // --- update counter for preference of winner from simulated instance
+    preferencesCircumstanceCounter = updatePrefCircCounter(preferencesCircumstanceCounter, altWinner, preferences, preferencesMultiInputs);
+
+    // --- update counter for judgements of winner from simulated instance
+    judgementsCircumstanceCounter = updateJudgeCircCounter(judgementsCircumstanceCounter, altWinner, judgements, judgementsMultiInputs, judgementsCircumstanceCounter, judgementsMultiInputs);
+
+    return {rankAcceptabilityCounter: rankAccsCounter, preferencesCircumstanceCounter, judgementsCircumstanceCounter};
+
+}
+
+function updateRankAcceptabilityCounter(altsByRank: number[],
+                                        rankAcceptabilityCounter: number[][]): {
+    updatedRAC: number[][]
+} {
+    // deep copy
+    const rankAccs: number[][] = structuredClone(rankAcceptabilityCounter);
+
+    let alternative: number = 0;
+
+    // altsByRank = array where index is implicitly the rank, the alternative is in altsByRank[idx]
+    for (let rank = 0; rank < altsByRank.length; rank++) {
+        alternative = altsByRank[rank] - 1; // alternative at rank -1 is row index in rankAccs
+        rankAccs[alternative][rank] += 1;
+    }
+    return rankAccs;
+}
+
+function updatePrefCircCounter(prefCircCounter: number[][][], altWinner: number, preferences: number[], preferencesMultiInputs: number[][]): number[][][] {
+
+    // deep copy
+    let newPrefCircCounter: number[][][] = structuredClone(prefCircCounter);
+
+    for (let crit = 0; crit < newPrefCircCounter[altWinner].length; crit++) { // [kriterienindex]
+
+        for (let prefIdx = 0; prefIdx < newPrefCircCounter[altWinner][crit].length; prefIdx++) { // [bewertungsindex]
+
+            if (preferences[crit] === preferencesMultiInputs[crit][prefIdx]) {
+                newPrefCircCounter[altWinner][crit][prefIdx] += 1;
+            }
+        }
+    }
+
+    return newPrefCircCounter;
+}
+
+function updateJudgeCircCounter(judgCircCounter: number[][][][], altWinner: number, judgements: number[][], judgementsMultiInputs: number[][][]): number[][][][] {
+
+    // deep copy
+    let newJudgCircCounter = structuredClone(judgCircCounter);
+
+
+    for (let crit = 0; crit < newJudgCircCounter[altWinner].length; crit++) { // [kriterienindex]
+
+        for (let alt = 0; alt < newJudgCircCounter[altWinner][crit].length; alt++) { // [alternativenindex]
+
+            for (let judgeIdx = 0; judgeIdx < newJudgCircCounter[altWinner][crit][alt].length; judgeIdx++) { // [bewertungsindex]
+
+                if (judgements[crit][alt] === judgementsMultiInputs[crit][alt][judgeIdx]) {
+                    newJudgCircCounter[altWinner][crit][alt][judgeIdx] += 1;
+                }
+            }
+
+        }
+    }
+
+    return newJudgCircCounter;
+}
+
+function createStatistics(rankAcceptabilityCounter: number[][], kMC: number,
+                          decisionMakerData: { [o: string]: any }): {
+    winner: number,
+    chance: number,
+    rankAcceptabilityIndices: number[][]
+} {
+
+    const rankAcceptabilityIndices = createRankAcceptabilityIndices(decisionMakerData, rankAcceptabilityCounter, kMC)
+
+    const {winner, chance} = getWinnerAndChance(rankAcceptabilityIndices);
+
+    return {winner, chance, rankAcceptabilityIndices}
+
+}
+
+function createRankAcceptabilityIndices(decisionMakerData: {
+    [o: string]: any
+}, rankAcceptabilityCounter: number[][], kMC: number): {
+    rankAcceptabilityIndices: number[][]
+} {
+    // initialize an empty rank acceptability indices matrix
+    const rankAcceptabilityIndices = initializeRankAcceptabilityMatrix(decisionMakerData);
+
+    // shallow copy
+    const counterMatrix = rankAcceptabilityCounter;
+
+    // variation without kMC
+    // iterate over 1 col and rows + sum up number of instances
+    /*let sum = 0;
+    for (let j = 0; j < counterMatrix[0].length; j++) {
+        sum += counterMatrix[0][j];
+    }
+    */
+
+    // normalize counters with sum of instances
+    for (let i = 0; i < rankAcceptabilityIndices.length; i++) {
+        for (let j = 0; j < rankAcceptabilityIndices[i].length; j++) {
+            rankAcceptabilityIndices[i][j] = counterMatrix[i][j] / kMC;
+        }
+    }
+
+    return rankAcceptabilityIndices;
+}
+
+// needed for UI
+function getWinnerAndChance(rankAcceptabilityIndices: number[][]): {
+    winner: number,
+    chance: number,
+} {
+
+    // needed for user feedback in ExitModal
+
+    let winner: number = -1; // is alternative with highest chance of being rank one
+    let chance: number = -1; // probability of winner alernative
+
+    const rankOne = rankAcceptabilityIndices[0]
+
+    for (let i = 0; i < rankOne.length; i++) {
+        if (chance < rankOne[i]) {
+            chance = rankOne[i];
+            winner = i + 1;
+        }
+    }
+
+    chance = Math.round(chance * 100);
+    return {winner, chance};
+
 }
