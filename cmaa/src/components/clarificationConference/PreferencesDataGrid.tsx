@@ -9,8 +9,8 @@ export const PreferencesDataGrid = ({preferenceMultiInputs, onPreferenceChange}:
         // Update eigene Datenstruktur anhand des bearbeiteten Rows
         const critIdx = parseInt(newRow.id.replace("crit", "")) - 1;
 
-        // Create a copy of the existing judgementMultiInputs
-        const updated = [...preferenceMultiInputs];
+        // Create a deep copy of the existing preferenceMultiInputs
+        const updated = structuredClone(preferenceMultiInputs);
 
         for (let prefIdx = 0; prefIdx < updated[critIdx].length; prefIdx++) {
             const prefProperty =`pref${prefIdx+ 1}`;
@@ -54,7 +54,7 @@ export const PreferencesDataGrid = ({preferenceMultiInputs, onPreferenceChange}:
         const cols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria',
+                headerName: 'criteria/preferences',
                 maxWidth: 100,
             },
         ]
@@ -63,7 +63,7 @@ export const PreferencesDataGrid = ({preferenceMultiInputs, onPreferenceChange}:
         for (let prefIndex = 0; prefIndex < maxNumPrefs; prefIndex++) {
             cols.push({
                 field: `pref${prefIndex + 1}`,
-                headerName: `Preference ${prefIndex + 1}`,
+                headerName: '',//`Preference ${prefIndex + 1}`,
                 minWidth: 100,
                 maxWidth: 150,
                 editable: true,

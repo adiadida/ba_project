@@ -61,113 +61,73 @@ export default function CAAPage() {
     const handlePreferenceChange = (newPrefs: number[][]) => setEditedPrefs(newPrefs);
     const handleJudgementChange = (newJudgements: number[][][]) => setEditedJudgements(newJudgements);
 
-    // todo fix?????
-    // --- getting updated data and triggering cmaa once (noice)
-    const handleResend = () => {
-
-        // Rank Acceptability Counter und Indices zurücksetzen
-        const initialRACounter: number [][] = initializeRankAcceptabilityMatrix(decisionMakerData);
-        setRankAcceptabilityCounter(initialRACounter);
-
-        const initialRAIndices: number [][] = initializeRankAcceptabilityMatrix(decisionMakerData);
-        setRankAcceptabilityIndices(initialRAIndices);
-
-        // build aggregated preferences by reducing current MultiInputs
-        const reduceMultiPrefs = () => {
-            const reduced: Set<number>[] = [];
-            for (let i = 0; i < editedPrefs.length; i++) {
-                reduced[i] = new Set<number>();
-                for (let j = 0; j < editedPrefs[i].length; j++) {
-                    if (
-                        editedPrefs[i][j] !== undefined &&
-                        !Number.isNaN(editedPrefs[i][j])
-                    ) {
-                        reduced[i].add(editedPrefs[i][j]);
-                    }
-                }
-            }
-            return reduced;
-        };
-
-        // build aggregated judgements by reducing current MultiInputs
-        const reduceMultiJudges = () => {
-            const reduced: Set<number>[][] = [];
-            for (let i = 0; i < editedJudgements.length; i++) {
-                reduced[i] = [];
-                for (let j = 0; j < editedJudgements[i].length; j++) {
-                    reduced[i][j] = new Set<number>();
-                    for (let k = 0; k < editedJudgements[i][j].length; k++) {
-                        if (
-                            editedJudgements[i][j][k] !== undefined &&
-                            !Number.isNaN(editedJudgements[i][j][k])
-                        ) {
-                            reduced[i][j].add(editedJudgements[i][j][k]);
-                        }
-                    }
-                }
-            }
-            return reduced;
-        };
-
-        // set aggregated
-        const aggPrefs: Set<number>[] = reduceMultiPrefs();
-        setAggregatedPreferences(aggPrefs);
-
-        const aggJudgs: Set<number>[][] = reduceMultiJudges();
-        setAggregatedJudgements(aggJudgs);
-
-        // should trigger all necessary useEffects
-        // re-initialize Multi-Inputs, Circumstance Counter - should be done by useEffect
-        // cmaa algorithm triggered by useEffect
-
-        // stepCounter erhöhen
-        setStepCounter(prev => prev + 1);
-
-    };
-
-    // Fetch and parse data from URL params
+    // compute data for first render
     useEffect(() => {
 
-        // newData[dmId] = {
-        //   criteria: parsedData.criteria,
-        //   weights: parsedData.weights,
-        //   alt1 ... altn // other processed data
-        // };
+        // init RNG
+        // use randomNumberGenerator with uniform chance for Monte Carlo simulations
+        initializeGenerator(/*'4321'*/);
 
-        const newData: { [dmId: string]: any } = {};
+        // get initial input data
+        let decisionMakerData = getDecisionMakerData(searchParams);
 
-        // multiple dmIds or a single dmId parameter with multiple values
-        /* example data:
-        * inputcaa?data={"1"%3A[{"id"%3A0%2C"criteria"%3A"criterion 1"%2C"weight"%3A1%2C"alt1"%3A2%2C"alt2"%3A5%2C"alt3"%3A1}%2C{"id"%3A1%2C"criteria"%3A"criterion 2"%2C"weight"%3A5%2C"alt1"%3A3%2C"alt2"%3A4%2C"alt3"%3A2}%2C{"id"%3A2%2C"criteria"%3A"criterion 3"%2C"weight"%3A2%2C"alt1"%3A4%2C"alt2"%3A3%2C"alt3"%3A3}%2C{"id"%3A1000%2C"criteria"%3A"weighted sum"%2C"alt1"%3A25%2C"alt2"%3A31%2C"alt3"%3A17%2C"alt4"%3A0%2C"alt5"%3A0}%2C{"id"%3A1001%2C"criteria"%3A"rank"%2C"alt1"%3A2%2C"alt2"%3A1%2C"alt3"%3A3%2C"alt4"%3A4%2C"alt5"%3A4}]%2C"2"%3A[{"id"%3A0%2C"criteria"%3A"criterion 1"%2C"weight"%3A4%2C"alt1"%3A5%2C"alt2"%3A1%2C"alt3"%3A3}%2C{"id"%3A1%2C"criteria"%3A"criterion 2"%2C"weight"%3A2%2C"alt1"%3A1%2C"alt2"%3A2%2C"alt3"%3A2}%2C{"id"%3A2%2C"criteria"%3A"criterion 3"%2C"weight"%3A3%2C"alt1"%3A2%2C"alt2"%3A5%2C"alt3"%3A1}%2C{"id"%3A1000%2C"criteria"%3A"weighted sum"%2C"alt1"%3A28%2C"alt2"%3A23%2C"alt3"%3A19%2C"alt4"%3A0%2C"alt5"%3A0}%2C{"id"%3A1001%2C"criteria"%3A"rank"%2C"alt1"%3A1%2C"alt2"%3A2%2C"alt3"%3A3%2C"alt4"%3A4%2C"alt5"%3A4}]}
-        * */
-        searchParams.forEach((value, key) => {
-            try {
-                // Decode the URL-encoded string
-                const decodedString = decodeURIComponent(value);
-                // Parse the JSON string
-                const parsedData = JSON.parse(decodedString);
+        // initialize some matrices
+        let {
+            aggregatedJudgements,
+            aggregatedPreferences,
+            rankAcceptabilityIndices,
+            rankAcceptabilityCounter
+        } = initPageStateData(decisionMakerData);
 
-                //key used as dmId
-                // Generate data object for this key
-                if (typeof parsedData === 'object' && parsedData !== null) {
-                    newData[key] = parsedData;
-                } else {
-                    console.warn(`Parsed data for ${key} is not an object.`);
-                }
-            } catch (error) {
-                console.error(`Error parsing data for ${key}:`, error);
-            }
-        });
+        // initialize MultiInputs
+        const {
+            preferencesMultiInputs,
+            judgementsMultiInputs
+        } = getMultiData(aggregatedPreferences, aggregatedJudgements);
 
-        if (Object.keys(newData).length === 0) {
-            // Use testData if no data in URL
-            const fallbackData = testData(); // get the 'data' object from testData
-            //console.log('test Data:', fallbackData);
-            setDecisionMakerData(fallbackData);
-        } else {
-            //from URL generated data
-            setDecisionMakerData(newData);
-        }
+        // initialize circumstance counters
+        let {
+            preferencesCircumstanceCounter,
+            judgementsCircumstanceCounter
+        } = getInitialCircCounters(aggregatedPreferences, aggregatedJudgements);
+
+        // for UI
+        let winner: number;
+        let chance: number;
+
+        // execute CMAA algorithm when all input parameters are properly set
+        ({
+            winner,
+            chance,
+            rankAcceptabilityIndices,
+            preferencesCircumstanceCounter,
+            judgementsCircumstanceCounter,
+            rankAcceptabilityCounter
+        } = cMAA(
+            aggregatedJudgements,
+            aggregatedPreferences,
+            rankAcceptabilityCounter,
+            rankAcceptabilityIndices,
+            preferencesCircumstanceCounter,
+            judgementsCircumstanceCounter,
+            preferencesMultiInputs,
+            judgementsMultiInputs,
+            decisionMakerData
+        ));
+
+        setAggregatedPreferences(aggregatedPreferences);
+        setAggregatedJudgements(aggregatedJudgements);
+        setRankAcceptabilityCounter(rankAcceptabilityCounter);
+        setRankAcceptabilityIndices(rankAcceptabilityIndices);
+        setPreferencesMultiInputs(preferencesMultiInputs);
+        setJudgementsMultiInputs(judgementsMultiInputs);
+        preferencesCircumstanceCounterRef.current = preferencesCircumstanceCounter;
+        judgementsCircumstanceCounterRef.current = judgementsCircumstanceCounter;
+        setAlternativeWinner(winner);
+        setChanceWinner(chance);
+        setEditedPrefs(preferencesMultiInputs);
+        setEditedJudgements(judgementsMultiInputs);
+
     }, [searchParams]);
 
     // function that generates aggregations of decisionMakerData
@@ -192,387 +152,82 @@ export default function CAAPage() {
 
     }, [decisionMakerData]);
 
-    useEffect(() => {
-
-        if (aggregatedPreferences !== undefined
-            && aggregatedPreferences.length > 0
-            && aggregatedJudgements !== undefined
-            && aggregatedJudgements[0] !== undefined
-            && aggregatedJudgements.length > 0
-        ) {
-
-            // counters to get conditions for rank 1 from instances
-            const prefInst = initializePreferencesAndCounter();
-            setPreferencesMultiInputs(prefInst.preferencesInputs);
-            preferencesCircumstanceCounterRef.current = prefInst.prefCircCounter;
-            //console.log('aggregated prefs in Multimatrix form', prefInst.preferencesInputs);
-            //console.log('initial prefs counter in Multimatrix form', prefInst.prefCircCounter);
-
-            const judgInst = initializeJudgementsAndCounter();
-            setJudgementsMultiInputs(judgInst.judgementsInputs);
-            judgementsCircumstanceCounterRef.current = judgInst.judgCircCounter;
-            //console.log('aggregated judg in Multimatrix form', judgInst.judgementsInputs);
-            //console.log('initial judg counter in Multimatrix form', judgInst.judgCircCounter);
-        }
-    }, [aggregatedPreferences, aggregatedJudgements])
-
-
-    // interface row object
-    interface Row {
-        id: number;
-        criteria: string;
-        weight: number | undefined;
-
-        [p: string]: any;
+        return {
+            aggregatedPreferences: aggPrefs,
+            aggregatedJudgements: aggJudgs,
+            rankAcceptabilityCounter: initialRACounter,
+            rankAcceptabilityIndices: initialRAIndices
+        };
     }
 
-    // aggJudgementMatrix ... array for each criterion m  = a set of unique values from decisionMaker preferences
-    const aggPreferences = (data: { [oid: string]: any }): Set<number>[] => {
-        // array of Set<number> = unique
-        let aggPreferences: Set<number>[] = [];
-
-        // check if data isEmpty -  data is object with oid --> that object then contains object arrays of decision maker data
-        const dmData = Object.values(data);
-
-        // error handling
-        if (dmData.length === 0) {
-            return aggPreferences;
-        }
-
-        // from the first decision maker - first array of row objects
-        const firstDM: Row[] = dmData[0][1];
-
-        // Extract criteria keys
-        const criteriaArray: string[] = []; // Set has unique values
-        firstDM.forEach((object: Row) => {
-            if (object.id !== 1000 && object.id !== 1001) {
-                criteriaArray.push(object.criteria);
-            }
-        })
-
-        // Initialize aggPreferences
-        criteriaArray.forEach(() => {
-            aggPreferences.push(new Set<number>)
-        });
-
-        const decisionMakers = dmData[0]; // contains object array for each decision maker
-
-        for (const dmID of Object.keys(decisionMakers)) { // iterate over decision makers
-            const decisionMaker = decisionMakers[dmID];
-
-            // set weight for each criterion
-            for (let row = 0; row < aggPreferences.length; row++) { // iterate over rows
-                const decisionRow = decisionMaker[row];
-                if (!decisionRow) continue; // Skip if decisionRow is undefined or null
-
-                if (
-                    criteriaArray[row] === decisionRow.criteria &&
-                    typeof decisionRow.weight === 'number'
-                ) {
-                    // add preference weight to set
-                    aggPreferences[row].add(decisionRow.weight);
-                }
-
-            }
-        }
-
-        return aggPreferences;
-        /*
-         returns with example data:
-         [
-            0: Set [1,4] // is "criterion 1"
-            1: Set [5,2] // is "criterion 2"
-            2: Set [2,3] // is "criterion 2"
-        ]
-        */
-    }
-
-    // aggJudgementMatrix ... Matrix for each criterion m and for each alternative n = a set of unique values from decisionMaker judgements
-    const aggJudgements = (data: { [oid: string]: any }): Set<number>[][] => {
-        // matrix or 2-dimensional array of Set<number> = unique
-        let aggJudgements: Set<number>[][] = [];
-        // check if data isEmpty -  data is object with oid --> that object then contains object arrays of decision maker data
-        const dmData = Object.values(data);
-
-        // error handling
-        if (dmData.length === 0) {
-            return aggJudgements;
-        }
-
-        // from the first decision maker - first array of row objects
-        const firstDM: Row[] = dmData[0][1];
-        // get criteria
-        const criteriaArray: string[] = [];
-        firstDM.forEach((object: Row) => {
-            if (object.id !== 1000 && object.id !== 1001) {
-                criteriaArray.push(object.criteria);
-            }
-        })
-        // from first row of first decision maker
-        const firstRow: Row = firstDM[0];
-        // get alternatives
-        const alternativesArray: string[] = [];
-        // Extract keys starting with 'alt'
-        Object.keys(firstRow).forEach((key) => {
-            if (key.startsWith('alt')) {
-                alternativesArray.push(key);
-            }
-        });
-
-        const criteriaCount = criteriaArray.length;
-        const alternativesCount = alternativesArray.length;
-
-        // Initialize the array with empty sets
-        for (let row = 0; row < criteriaCount; row++) {
-            aggJudgements[row] = [];
-            for (let col = 0; col < alternativesCount; col++) {
-                aggJudgements[row][col] = new Set<number>();
-            }
-        }
-
-        const decisionMakers = dmData[0]; // contains an object array for each decision maker
-
-        for (const dmID of Object.keys(decisionMakers)) { // iterate over decision makers
-            const decisionMaker = decisionMakers[dmID];
-
-            // set weight for each criterion
-            for (let row = 0; row < criteriaCount; row++) { // iterate over rows = criteria
-                const decisionRow = decisionMaker[row];
-
-                for (let col = 0; col < alternativesCount; col++) { // iterate over cols = alternatives
-                    if (
-                        criteriaArray[row] === decisionRow.criteria && alternativesArray[col] !== undefined
-                    ) {
-                        const altkey: string = alternativesArray[col];
-                        aggJudgements[row][col].add(decisionRow[altkey])
-                    }
-                }
-
-            }
-        }
-
-        return aggJudgements;
-    }
-
-    // needed for statistics
-    const initializePreferencesAndCounter = () => {
-
-        // [criterion] [preference]
-        let preferencesInputs: number[][] = [];
-
-        for (let crit = 0; crit < aggregatedPreferences.length; crit++) {
-            const prefs = Array.from(aggregatedPreferences[crit]).sort(); // convert Set into sorted array
-            preferencesInputs[crit] = [];
-
-            for (let prefIdx = 0; prefIdx < prefs.length; prefIdx++) {
-                preferencesInputs[crit][prefIdx] = prefs[prefIdx];
-            }
-        }
-
-        // initialize Counter
-        let prefCircCounter: number[][][] = [];
-
-        const numAlts = aggregatedJudgements[0].length; // information only in judgements
-
-        for (let altWinner = 0; altWinner < numAlts; altWinner++) { // [a_i gewinne]
-
-            prefCircCounter[altWinner] = []
-
-            for (let crit = 0; crit < aggregatedPreferences.length; crit++) { // [kriterienindex]
-                prefCircCounter[altWinner][crit] = [];
-
-                const numPrefs = Array.from(aggregatedPreferences[crit]).length ?? 1;
-                for (let prefIdx = 0; prefIdx < numPrefs; prefIdx++) { // [bewertungsindex]
-                    prefCircCounter[altWinner][crit][prefIdx] = 0;
-                }
-            }
-        }
-        return {preferencesInputs, prefCircCounter};
-    }
-
-    const initializeJudgementsAndCounter = () => {
-        // [criterion][alternative][judgement]
-        let judgementsInputs: number[][][] = [];
-
-        for (let crit = 0; crit < aggregatedJudgements.length; crit++) {
-            judgementsInputs[crit] = [];
-            for (let alt = 0; alt < aggregatedJudgements[crit].length; alt++) {
-                judgementsInputs[crit][alt] = [];
-
-                const judgs = Array.from(aggregatedJudgements[crit][alt]).sort(); // convert set into sorted array
-                judgementsInputs[crit][alt] = judgs;
-            }
-        }
-
-        // initialize Counter
-        let judgCircCounter: number[][][][] = [];
-
-        const numAlts = aggregatedJudgements[0].length;
-        const numCrits = aggregatedJudgements.length;
-
-        for (let altWinner = 0; altWinner < numAlts; altWinner++) { // [a_i gewinne]
-            judgCircCounter[altWinner] = [];
-
-            for (let crit = 0; crit < numCrits; crit++) { // [kriterienindex]
-                judgCircCounter[altWinner][crit] = [];
-
-                for (let alt = 0; alt < numAlts; alt++) { // [alternativenindex]
-                    judgCircCounter[altWinner][crit][alt] = [];
-
-                    const numJudgements = aggregatedJudgements[crit][alt].size;
-                    for (let judgeIdx = 0; judgeIdx < numJudgements; judgeIdx++) { // [bewertungsindex]
-                        judgCircCounter[altWinner][crit][alt][judgeIdx] = 0;
-                    }
-                }
-            }
-        }
-        return {judgementsInputs, judgCircCounter};
-    }
-
-
-    const initializeRankAcceptabilityMatrix = (data: { [oid: string]: any }): number[][] => {
-        // rows are implicitly a1...ai alternatives and cols are implicitly r1 ... rj ranks
-        let rankAcceptabilityMatrix: number[][] = [];
-
-        // check if data isEmpty -  data is object with oid --> that object then contains object arrays of decision maker data
-        const dmData = Object.values(data);
-
-        // error handling
-        if (dmData.length === 0) {
-            return rankAcceptabilityMatrix;
-        }
-        const firstRow: Row = dmData[0][1][0];
-        const alternativesArray: string[] = [];
-        // Extract keys starting with 'alt'
-        Object.keys(firstRow).forEach((key) => {
-            if (key.startsWith('alt')) {
-                alternativesArray.push(key);
-            }
-        });
-
-        // Matrix is ixj with i=j... number of alternatives
-        for (let i = 0; i < alternativesArray.length; i++) {
-            rankAcceptabilityMatrix[i] = [];
-            for (let j = 0; j < alternativesArray.length; j++) {
-                rankAcceptabilityMatrix[i][j] = 0;
-            }
-        }
-
-        return rankAcceptabilityMatrix;
-    }
-
-    /**
-     * Simple additive weighting solver: returns weighted sums = performances of each alternative
-     */
-    const generatePerformances = (preferences: number[], judgements: number[][]): number[] => {
-        const performances: number[] = [];
-
-        // getting number of alternatives from first col
-        const numberAlts = judgements[0]?.length ?? 0; // assuming all criteria arrays are of same length
-        const numberCrits = judgements?.length ?? 0;
-
-        // iterate over cols = alternatives
-        for (let alternative = 0; alternative < numberAlts; alternative++) {
-            let sum = 0;
-            for (let criterion = 0; criterion < numberCrits; criterion++) {
-                sum += judgements[criterion][alternative] * preferences[criterion];
-            }
-            performances[alternative] = sum;
-        }
-
-        return performances;
-    }
-
-    /**
-     * Generate ranking based on weighted sum = performance of alternative
-     * highest performance ... rank 1
-     */
-    const generateRanking = (preferences: number[], judgements: number [][]) => {
-
-        if (preferences.length === 0 || judgements.length === 0) {
-            return [];
-        }
-
-        // get performances of every alternative
-        const performances: number[] = generatePerformances(preferences, judgements);
-        //console.log('weighted sums: ', performances);
-
-        // Create an array of alternatives with their performances
-        const alternatives = performances.map((performance, index) => ({index, performance}));
-
-        // Sort alternatives in descending order of performance
-        alternatives.sort((a, b) => b.performance - a.performance);
-
-        // Extract sorted alternative indices as ranking
-        const rankings = alternatives.map(alternative => alternative.index + 1);
-        //console.log('rankings ', rankings);
-
-        return rankings;
-
-    }
-
-    const updateCounters = (preferences: number[], judgements: number[][], altsByRank: number[]) => {
-        const rankAccs: number[][] = rankAcceptabilityCounter;
-
-        let alternative: number = 0;
-
-        // altsByRank = array where index is implicitly the rank, the alternative is in altsByRank[idx]
-        for (let rank = 0; rank < altsByRank.length; rank++) {
-            alternative = altsByRank[rank] - 1; // alternative at rank -1 is row index in rankAccs
-            rankAccs[alternative][rank] += 1;
-        }
-        setRankAcceptabilityCounter(rankAccs)
-
-        // rank 1 is at index 0 --> altWinner+1 is in altsByRank[0] --> that is the winner of instance
-        const altWinner = altsByRank[0] - 1; // altWinner is correctly initialised with the index of the winner alternative
-
-        const prefCircCounter = preferencesCircumstanceCounterRef.current;
-        const judgCircCounter = judgementsCircumstanceCounterRef.current;
-
-        // error handling
-        if (prefCircCounter === null || judgCircCounter === null) {
-            console.log('Counters not initialized');
-            return;
-        }
-
-        // --- update counter for preference of winner from simulated instance
-        for (let crit = 0; crit < prefCircCounter[altWinner].length; crit++) { // [kriterienindex]
-
-            for (let prefIdx = 0; prefIdx < prefCircCounter[altWinner][crit].length; prefIdx++) { // [bewertungsindex]
-
-                if (preferences[crit] === preferencesMultiInputs[crit][prefIdx]) {
-                    prefCircCounter[altWinner][crit][prefIdx] += 1;
-                }
-            }
-        }
-
-        // set counter
-        preferencesCircumstanceCounterRef.current = prefCircCounter;
-        //console.log(prefCircCounter);
-
-        // --- update counter for judgements of winner from simulated instance
-        for (let crit = 0; crit < judgCircCounter[altWinner].length; crit++) { // [kriterienindex]
-
-            for (let alt = 0; alt < judgCircCounter[altWinner][crit].length; alt++) { // [alternativenindex]
-
-                for (let judgeIdx = 0; judgeIdx < judgCircCounter[altWinner][crit][alt].length; judgeIdx++) { // [bewertungsindex]
-
-                    if (judgements[crit][alt] === judgementsMultiInputs[crit][alt][judgeIdx]) {
-                        judgCircCounter[altWinner][crit][alt][judgeIdx] += 1;
-                    }
-                }
-
-            }
-        }
-
-        // set counter
-        judgementsCircumstanceCounterRef.current = judgCircCounter;
-
-        console.log('set circ counter');
-    }
+       // --- getting updated data and re-triggering cmaa
+    const handleResend = () => {
+
+        let decisionMakerData = getDecisionMakerData(searchParams);
+
+        // initialize rank acceptability matrices
+        let {
+            rankAcceptabilityIndices,
+            rankAcceptabilityCounter
+        } = initPageStateData(decisionMakerData);
+
+        // get aggregated inputs from edited inputs
+        const aggregatedPreferences: Set<number>[] = reduceMultiPreferences(editedPrefs);
+        const aggregatedJudgements: Set<number>[][] = reduceMultiJudgements(editedJudgements);
+
+        // create multi inputs from aggregated inputs
+        const {
+            preferencesMultiInputs,
+            judgementsMultiInputs
+        } = getMultiData(aggregatedPreferences, aggregatedJudgements);
+
+        // initialize circumstance counters
+        let {
+            preferencesCircumstanceCounter,
+            judgementsCircumstanceCounter
+        } = getInitialCircCounters(preferencesMultiInputs, aggregatedJudgements);
+
+        // information for UI
+        let winner: number;
+        let chance: number;
+
+        // execute CMAA algorithm when all input parameters are properly set
+        ({
+            winner,
+            chance,
+            rankAcceptabilityIndices,
+            preferencesCircumstanceCounter,
+            judgementsCircumstanceCounter,
+            rankAcceptabilityCounter
+        } = cMAA(
+            aggregatedJudgements,
+            aggregatedPreferences,
+            rankAcceptabilityCounter,
+            rankAcceptabilityIndices,
+            preferencesCircumstanceCounter,
+            judgementsCircumstanceCounter,
+            preferencesMultiInputs,
+            judgementsMultiInputs,
+            decisionMakerData
+        ));
+
+        // setter
+        setAggregatedPreferences(aggregatedPreferences);
+        setAggregatedJudgements(aggregatedJudgements);
+        setRankAcceptabilityCounter(rankAcceptabilityCounter);
+        setRankAcceptabilityIndices(rankAcceptabilityIndices);
+        setPreferencesMultiInputs(preferencesMultiInputs);
+        setJudgementsMultiInputs(judgementsMultiInputs);
+        preferencesCircumstanceCounterRef.current = preferencesCircumstanceCounter;
+        judgementsCircumstanceCounterRef.current = judgementsCircumstanceCounter;
+        setAlternativeWinner(winner);
+        setChanceWinner(chance);
+
+        // update stepCounter for number of clarification conferences
+        setStepCounter(stepCounter + 1);
+    };
 
     // --- Seeded RNG ---
-    // use randomNumberGenerator with uniform chance for Monte Carlo simulations
 
     // UseRef to hold the seedrandom generator instance
     const rngRef = useRef<seedrandom.PRNG | null>(null);
@@ -711,13 +366,9 @@ export default function CAAPage() {
         }
 
         // counters to get conditions for rank 1 from instances
-        /*const prefInst = initializePreferencesAndCounter();
-         preferencesCircumstanceCounterRef.current = prefInst.prefCircCounter;
-
-         const judgInst = initializeJudgementsAndCounter();
-         judgementsCircumstanceCounterRef.current = judgInst.judgCircCounter;*/
-
-        console.log('cmaa')
+        let preferencesCircumstanceCounter = _preferencesCircumstanceCounter;
+        let judgementsCircumstanceCounter = _judgementsCircumstanceCounter;
+        let rankAcceptabilityCounter = _rankAcceptabilityCounter;
 
         const kMonteCarlo = 10000;
         for (let k = 0; k < kMonteCarlo; k++) {
@@ -730,7 +381,11 @@ export default function CAAPage() {
         //console.log('d prefs ', dPrefsRef.current);
         //console.log('d judges', dJudgesRef.current);
 
-        createStatistics(rankAcceptabilityCounter, kMonteCarlo);
+        const {
+            winner,
+            chance,
+            rankAcceptabilityIndices
+        } = createStatistics(rankAcceptabilityCounter, kMonteCarlo, decisionMakerData);
         //console.log('rankAcceptabilityCounter ', rankAcceptabilityCounter);
         console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
     }
