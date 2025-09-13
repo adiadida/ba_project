@@ -24,8 +24,8 @@ export const JudgementsDataGrid = ({judgementMultiInputs, onJudgementChange}: Ju
         // Update eigene Datenstruktur anhand des bearbeiteten Rows
         const critIdx = parseInt(newRow.id.replace("crit", "")) - 1;
 
-        // Create a copy of the existing judgementMultiInputs
-        const updated = [...judgementMultiInputs];
+        // Create a deep copy of the existing judgementMultiInputs
+        const updated = structuredClone(judgementMultiInputs);
 
         // Update the specific criterion's alternatives with the new values from the edited row
         for (let alt = 0; alt < updated[critIdx].length; alt++) {
@@ -37,6 +37,7 @@ export const JudgementsDataGrid = ({judgementMultiInputs, onJudgementChange}: Ju
                 }
             }
         }
+
         onJudgementChange(updated);
         return newRow;
     };
