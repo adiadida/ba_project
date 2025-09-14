@@ -1,7 +1,7 @@
 'use client'
 
 import {GenericHeader} from "@/components/generics/GenericHeader";
-import {useSearchParams} from "next/navigation"; // useRouter hook should be imported from next/navigation
+import {ReadonlyURLSearchParams, useSearchParams} from "next/navigation"; // useRouter hook should be imported from next/navigation
 import React, {useEffect, useRef, useState} from "react";
 import {Grid} from "@mui/material";
 import seedrandom from "seedrandom";
@@ -11,8 +11,6 @@ import {ClarificationInputs} from "@/components/clarificationConference/Clarific
 import {Recommendations} from "@/components/recommendations/Recommendations";
 import {MetricsGrid} from "@/components/discussionMetrics/MetricsGrid";
 import {GenericAccordion} from "@/components/generics/GenericAccordion";
-import {SearchParams} from "next/dist/server/request/search-params";
-
 
 export default function CAAPage() {
 
@@ -156,7 +154,7 @@ export default function CAAPage() {
         };
     }
 
-       // --- getting updated data and re-triggering cmaa
+    // --- getting updated data and re-triggering cmaa
     const handleResend = () => {
 
         let decisionMakerData = getDecisionMakerData(searchParams);
@@ -181,7 +179,7 @@ export default function CAAPage() {
         let {
             preferencesCircumstanceCounter,
             judgementsCircumstanceCounter
-        } = getInitialCircCounters(preferencesMultiInputs, aggregatedJudgements);
+        } = getInitialCircCounters(aggregatedPreferences, aggregatedJudgements);
 
         // information for UI
         let winner: number;
@@ -351,8 +349,10 @@ export default function CAAPage() {
         const {
             winner,
             chance,
-            rankAcceptabilityIndices
-        } = createStatistics(rankAcceptabilityCounter, kMonteCarlo, decisionMakerData);
+            rankAcceptabilityIndices,
+            prefEntropy,
+            judgEntropy
+        } = createStatistics(rankAcceptabilityCounter, kMonteCarlo, decisionMakerData, preferencesCircumstanceCounter, preferencesMultiInputs, judgementsCircumstanceCounter, judgementsMultiInputs);
         //console.log('rankAcceptabilityCounter ', rankAcceptabilityCounter);
         //console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
 
@@ -609,9 +609,13 @@ export default function CAAPage() {
     );
 }
 
-function getDecisionMakerData(searchParams: SearchParams): {
-    decisionMakerData: { [oid: string]: any }
-} {
+function getDecisionMakerData(searchParams: ReadonlyURLSearchParams):
+// decisionMakerData
+    { [oid: string]: any } {
+    if (searchParams === undefined) {
+        return testData();
+    }
+
     // let decisionMakerData: { [oid: string]: any };
     // parse data from URL params
     const newData: { [dmId: string]: any } = {};
@@ -626,6 +630,7 @@ function getDecisionMakerData(searchParams: SearchParams): {
     /* example data:
     * inputcaa?data={"1"%3A[{"id"%3A0%2C"criteria"%3A"criterion 1"%2C"weight"%3A1%2C"alt1"%3A2%2C"alt2"%3A5%2C"alt3"%3A1}%2C{"id"%3A1%2C"criteria"%3A"criterion 2"%2C"weight"%3A5%2C"alt1"%3A3%2C"alt2"%3A4%2C"alt3"%3A2}%2C{"id"%3A2%2C"criteria"%3A"criterion 3"%2C"weight"%3A2%2C"alt1"%3A4%2C"alt2"%3A3%2C"alt3"%3A3}%2C{"id"%3A1000%2C"criteria"%3A"weighted sum"%2C"alt1"%3A25%2C"alt2"%3A31%2C"alt3"%3A17%2C"alt4"%3A0%2C"alt5"%3A0}%2C{"id"%3A1001%2C"criteria"%3A"rank"%2C"alt1"%3A2%2C"alt2"%3A1%2C"alt3"%3A3%2C"alt4"%3A4%2C"alt5"%3A4}]%2C"2"%3A[{"id"%3A0%2C"criteria"%3A"criterion 1"%2C"weight"%3A4%2C"alt1"%3A5%2C"alt2"%3A1%2C"alt3"%3A3}%2C{"id"%3A1%2C"criteria"%3A"criterion 2"%2C"weight"%3A2%2C"alt1"%3A1%2C"alt2"%3A2%2C"alt3"%3A2}%2C{"id"%3A2%2C"criteria"%3A"criterion 3"%2C"weight"%3A3%2C"alt1"%3A2%2C"alt2"%3A5%2C"alt3"%3A1}%2C{"id"%3A1000%2C"criteria"%3A"weighted sum"%2C"alt1"%3A28%2C"alt2"%3A23%2C"alt3"%3A19%2C"alt4"%3A0%2C"alt5"%3A0}%2C{"id"%3A1001%2C"criteria"%3A"rank"%2C"alt1"%3A1%2C"alt2"%3A2%2C"alt3"%3A3%2C"alt4"%3A4%2C"alt5"%3A4}]}
     * */
+    // @ts-ignore
     searchParams.forEach((value, key) => {
         try {
             // Decode the URL-encoded string
@@ -665,10 +670,9 @@ interface Row {
     [p: string]: any;
 }
 
-function getAggregatedPreferences(data: { [oid: string]: any }): {
-    // aggPreferencesArray ... array for each criterion m  = a set of unique values from decisionMaker preferences
-    aggPreferences: Set<number>[]
-} {
+function getAggregatedPreferences(data: { [oid: string]: any }):
+// aggPreferencesArray ... array for each criterion m  = a set of unique values from decisionMaker preferences
+    Set<number>[] {
 
     // array of Set<number> = unique
     let aggPreferences: Set<number>[] = [];
@@ -729,10 +733,9 @@ function getAggregatedPreferences(data: { [oid: string]: any }): {
     */
 }
 
-function getAggregatedJudgements(data: { [oid: string]: any }): {
-    // aggJudgementMatrix ... Matrix for each criterion m and for each alternative n = a set of unique values from decisionMaker judgements
-    aggJudgements: Set<number>[][]
-} {
+function getAggregatedJudgements(data: { [oid: string]: any }):
+// aggJudgementMatrix ... Matrix for each criterion m and for each alternative n = a set of unique values from decisionMaker judgements
+    Set<number>[][] {
     // matrix or 2-dimensional array of Set<number> = unique
     let aggJudgements: Set<number>[][] = [];
     // check if data isEmpty -  data is object with oid --> that object then contains object arrays of decision maker data
@@ -809,9 +812,8 @@ function getMultiData(aggregatedPreferences: Set<number>[], aggregatedJudgements
     return {preferencesMultiInputs, judgementsMultiInputs};
 }
 
-function initializeMultiPreferences(aggregatedPreferences: Set<number>[]): {
-    preferencesMultiInputs: number[][]
-} {
+function initializeMultiPreferences(aggregatedPreferences: Set<number>[]):
+    number[][] {
     // [criterion] [preference]
     let preferencesInputs: number[][] = [];
 
@@ -827,9 +829,8 @@ function initializeMultiPreferences(aggregatedPreferences: Set<number>[]): {
     return preferencesInputs;
 }
 
-function initializeMultiJudgements(aggregatedJudgements: Set<number>[][]): {
-    judgementsMultiInputs: number[][][]
-} {
+function initializeMultiJudgements(aggregatedJudgements: Set<number>[][]):
+    number[][][] {
     // [criterion][alternative][judgement]
     let judgementsInputs: number[][][] = [];
 
@@ -846,9 +847,8 @@ function initializeMultiJudgements(aggregatedJudgements: Set<number>[][]): {
     return judgementsInputs;
 }
 
-function reduceMultiPreferences(editedPrefs: number[][]): {
-    aggregatedPreferences: Set<number>[]
-} {
+function reduceMultiPreferences(editedPrefs: number[][]):
+    Set<number>[] {
     // build aggregated preferences by reducing current MultiInputs
 
     const reducedMultiPrefs: Set<number>[] = [];
@@ -866,9 +866,8 @@ function reduceMultiPreferences(editedPrefs: number[][]): {
     return reducedMultiPrefs;
 }
 
-function reduceMultiJudgements(editedJudgements: number[][][]): {
-    aggregatedJudgements: Set<number>[][]
-} {
+function reduceMultiJudgements(editedJudgements: number[][][]):
+    Set<number>[][] {
     // build aggregated judgements by reducing current MultiInputs
 
     const reducedMultiJudgements: Set<number>[][] = [];
@@ -889,9 +888,8 @@ function reduceMultiJudgements(editedJudgements: number[][][]): {
     return reducedMultiJudgements;
 }
 
-function initializeRankAcceptabilityMatrix(data: { [oid: string]: any }): {
-    rankAcceptabilityMatrix: number[][]
-} {
+function initializeRankAcceptabilityMatrix(data: { [oid: string]: any }):
+    number[][] {
     // needed for statistics -> rank acceptability counter + indices
     // rows are implicitly a1...ai alternatives and cols are implicitly r1 ... rj ranks
     let rankAcceptabilityMatrix: number[][] = [];
@@ -934,9 +932,8 @@ function getInitialCircCounters(aggregatedPreferences: Set<number>[], aggregated
     return {preferencesCircumstanceCounter, judgementsCircumstanceCounter};
 }
 
-function initializePreferencesCircumstanceCounter(aggregatedPreferences: Set<number>[], aggregatedJudgements: Set<number>[][]): {
-    prefCircCounter: number[][][]
-} {
+function initializePreferencesCircumstanceCounter(aggregatedPreferences: Set<number>[], aggregatedJudgements: Set<number>[][]):
+    number[][][] {
     // initialize Counter
     let prefCircCounter: number[][][] = [];
 
@@ -958,9 +955,8 @@ function initializePreferencesCircumstanceCounter(aggregatedPreferences: Set<num
     return prefCircCounter;
 }
 
-function initializeJudgementsCircumstanceCounter(aggregatedJudgements: Set<number>[][]): {
-    judgCircCounter: number[][][][]
-} {
+function initializeJudgementsCircumstanceCounter(aggregatedJudgements: Set<number>[][]):
+    number[][][][] {
     // initialize Counter
     let judgCircCounter: number[][][][] = [];
 
@@ -991,9 +987,8 @@ function initializeJudgementsCircumstanceCounter(aggregatedJudgements: Set<numbe
 /**
  * Simple additive weighting solver: returns weighted sums = performances of each alternative
  */
-function generatePerformances(preferences: number[], judgements: number[][]): {
-    performances: number[]
-} {
+function generatePerformances(preferences: number[], judgements: number[][]):
+    number[] {
     const performances: number[] = [];
 
     // getting number of alternatives from first col
@@ -1017,9 +1012,8 @@ function generatePerformances(preferences: number[], judgements: number[][]): {
  * Generate ranking based on weighted sum = performance of alternative
  * highest performance ... rank 1
  */
-function generateRanking(preferences: number[], judgements: number [][]): {
-    altsByRank: number[]
-} {
+function generateRanking(preferences: number[], judgements: number [][]):
+    number[] {
 
     if (preferences.length === 0 || judgements.length === 0) {
         return [];
@@ -1056,12 +1050,6 @@ function updateCounterMatrices(preferences: number[],
     judgementsCircumstanceCounter: number[][][][]
 } {
 
-    // error handling
-    if (preferencesCircumstanceCounter === null || judgementsCircumstanceCounter === null || rankAcceptabilityCounter === null) {
-        console.log('Counters not initialized');
-        return;
-    }
-
     // --- update counter for rank of alternatives of simulated instance
     const rankAccsCounter = updateRankAcceptabilityCounter(altsByRank, rankAcceptabilityCounter)
 
@@ -1072,16 +1060,15 @@ function updateCounterMatrices(preferences: number[],
     preferencesCircumstanceCounter = updatePrefCircCounter(preferencesCircumstanceCounter, altWinner, preferences, preferencesMultiInputs);
 
     // --- update counter for judgements of winner from simulated instance
-    judgementsCircumstanceCounter = updateJudgeCircCounter(judgementsCircumstanceCounter, altWinner, judgements, judgementsMultiInputs, judgementsCircumstanceCounter, judgementsMultiInputs);
+    judgementsCircumstanceCounter = updateJudgeCircCounter(judgementsCircumstanceCounter, altWinner, judgements, judgementsMultiInputs);
 
     return {rankAcceptabilityCounter: rankAccsCounter, preferencesCircumstanceCounter, judgementsCircumstanceCounter};
 
 }
 
 function updateRankAcceptabilityCounter(altsByRank: number[],
-                                        rankAcceptabilityCounter: number[][]): {
-    updatedRAC: number[][]
-} {
+                                        rankAcceptabilityCounter: number[][]):
+    number[][] {
     // deep copy
     const rankAccs: number[][] = structuredClone(rankAcceptabilityCounter);
 
@@ -1137,25 +1124,53 @@ function updateJudgeCircCounter(judgCircCounter: number[][][][], altWinner: numb
 }
 
 function createStatistics(rankAcceptabilityCounter: number[][], kMC: number,
-                          decisionMakerData: { [o: string]: any }): {
+                          decisionMakerData: { [o: string]: any },
+                          prefCircumstanceCounter: number[][][],
+                          preferenceMultiInputs: number[][],
+                          judgCircumstanceCounter: number[][][][],
+                          judgementsMultiInputs: number[][][],
+): {
     winner: number,
     chance: number,
-    rankAcceptabilityIndices: number[][]
+    rankAcceptabilityIndices: number[][],
+    currentPrefAcceptabilities: number[][][],
+    potentialPrefAcceptabilities: number[][][],
+    prefEntropy: number[][],
+    currentJudgAcceptabilities: number[][][][],
+    potentialJudgAcceptabilities: number[][][][],
+    judgEntropy: number[][][],
 } {
 
     const rankAcceptabilityIndices = createRankAcceptabilityIndices(decisionMakerData, rankAcceptabilityCounter, kMC)
 
+    const currentPrefAcceptabilities = computeCurrentPrefAcceptability(prefCircumstanceCounter, kMC);
+    const potentialPrefAcceptabilities = computePotentialPrefAcceptability(currentPrefAcceptabilities, prefCircumstanceCounter);
+    const prefEntropy = computePreferenceEntropy(potentialPrefAcceptabilities, preferenceMultiInputs, prefCircumstanceCounter);
+
+    const currentJudgAcceptabilities = computeCurrentJudgAcceptability(judgCircumstanceCounter, kMC);
+    const potentialJudgAcceptabilities = computePotentialJudgAcceptability(currentJudgAcceptabilities, judgCircumstanceCounter);
+    const judgEntropy = computeJudgementEntropy(potentialJudgAcceptabilities, judgementsMultiInputs, judgCircumstanceCounter);
+
     const {winner, chance} = getWinnerAndChance(rankAcceptabilityIndices);
 
-    return {winner, chance, rankAcceptabilityIndices}
+    return {
+        winner,
+        chance,
+        rankAcceptabilityIndices,
+        currentPrefAcceptabilities,
+        potentialPrefAcceptabilities,
+        prefEntropy,
+        currentJudgAcceptabilities,
+        potentialJudgAcceptabilities,
+        judgEntropy
+    }
 
 }
 
 function createRankAcceptabilityIndices(decisionMakerData: {
     [o: string]: any
-}, rankAcceptabilityCounter: number[][], kMC: number): {
-    rankAcceptabilityIndices: number[][]
-} {
+}, rankAcceptabilityCounter: number[][], kMC: number):
+    number[][] {
     // initialize an empty rank acceptability indices matrix
     const rankAcceptabilityIndices = initializeRankAcceptabilityMatrix(decisionMakerData);
 
@@ -1202,5 +1217,278 @@ function getWinnerAndChance(rankAcceptabilityIndices: number[][]): {
 
     chance = Math.round(chance * 100);
     return {winner, chance};
+}
 
+// --- judgement statistics
+function initializeJudgementAcceptability(judgCircumstanceCounter: number[][][][]): number[][][][] {
+    let judgAcceptability: number[][][][] = [];
+
+    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
+        judgAcceptability[altWinner] = [];
+
+        for (let crit = 0; crit < judgCircumstanceCounter[altWinner].length; crit++) {
+            judgAcceptability[altWinner][crit] = [];
+
+            for (let alt = 0; alt < judgCircumstanceCounter[altWinner][crit].length; alt++) {
+                judgAcceptability[altWinner][crit][alt] = [];
+
+                for (let judgIdx = 0; judgIdx < judgCircumstanceCounter[altWinner][crit][alt].length; judgIdx++) {
+                    judgAcceptability[altWinner][crit][alt][judgIdx] = 0;
+                }
+            }
+        }
+    }
+
+    return judgAcceptability;
+}
+
+// calculates current acceptability by normalizing counts over kMonteCarlo
+// -> becomes probability/distribution
+function computeCurrentJudgAcceptability(judgCircumstanceCounter: number[][][][], kMonteCarlo: number): number[][][][] {
+
+    let currentJudgAcceptability: number[][][][] = initializeJudgementAcceptability(judgCircumstanceCounter);
+
+    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
+
+        for (let crit = 0; crit < judgCircumstanceCounter[altWinner].length; crit++) {
+
+            for (let alt = 0; alt < judgCircumstanceCounter[altWinner][crit].length; alt++) {
+
+                for (let judgIdx = 0; judgIdx < judgCircumstanceCounter[altWinner][crit][alt].length; judgIdx++) {
+                    currentJudgAcceptability[altWinner][crit][alt][judgIdx] = judgCircumstanceCounter[altWinner][crit][alt][judgIdx] / kMonteCarlo;
+
+                }
+            }
+
+        }
+    }
+    return currentJudgAcceptability;
+}
+
+// normalizes current acceptability across alternatives for each preference
+// -> normalized probability/distribution
+function computePotentialJudgAcceptability(currJudgAcceptability: number[][][][], judgCircumstanceCounter: number[][][][]): number[][][][] {
+
+    const currJudgAcc = currJudgAcceptability;
+    let potentialJudgAcceptability = initializeJudgementAcceptability(judgCircumstanceCounter);
+
+
+    // error handling
+    if (isNaN(currJudgAcc[0][0][0][0]) || !isFinite(currJudgAcc[0][0][0][0])) {
+        console.log('potential preference acceptability is NaN or infinity');
+        return potentialJudgAcceptability;
+    }
+
+    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
+
+        for (let crit = 0; crit < judgCircumstanceCounter[altWinner].length; crit++) {
+
+            for (let alt = 0; alt < judgCircumstanceCounter[altWinner][crit].length; alt++) {
+
+                for (let judgIdx = 0; judgIdx < judgCircumstanceCounter[altWinner][crit][alt].length; judgIdx++) {
+
+                    // sum for normalization
+                    let sum = 0;
+                    for (let aWinner = 0; aWinner < judgCircumstanceCounter.length; aWinner++) {
+                        sum += currJudgAcc[aWinner][crit][alt][judgIdx];
+                    }
+
+                    potentialJudgAcceptability[altWinner][crit][alt][judgIdx] = currJudgAcc[altWinner][crit][alt][judgIdx] / sum;
+
+                }
+            }
+        }
+    }
+
+    return potentialJudgAcceptability;
+}
+
+const initializeJudgementEntropy = (judgementsMultiInputs: number[][][]): number[][][] => {
+    let judgEntropy: number[][][] = [];
+
+    for (let crit = 0; crit < judgementsMultiInputs.length; crit++) {
+        judgEntropy[crit] = [];
+        for (let alt = 0; alt < judgementsMultiInputs[crit].length; alt++) {
+            judgEntropy[crit][alt] = [];
+            for (let judgIdx = 0; judgIdx < judgementsMultiInputs[crit][alt].length; judgIdx++) {
+                judgEntropy[crit][alt][judgIdx] = 0;
+            }
+        }
+
+    }
+
+    return judgEntropy;
+}
+
+// loop over potential pref acceptability and compute judgement entropy
+// calculates Shannon entropy for the potential judgement acceptability distributions
+function computeJudgementEntropy(potJudgAcceptability: number[][][][], judgementsMultiInputs: number[][][], judgCircumstanceCounter: number[][][][]) {
+    // shallow copy
+    const potJudgAcc = potJudgAcceptability;
+    let judgementEntropy: number[][][] = initializeJudgementEntropy(judgementsMultiInputs);
+
+
+    for (let crit = 0; crit < judgementsMultiInputs.length; crit++) {
+
+        for (let alt = 0; alt < judgementsMultiInputs[crit].length; alt++) {
+
+            for (let judgIdx = 0; judgIdx < judgementsMultiInputs[crit][alt].length; judgIdx++) {
+
+
+                let sumPotJudg = 0;
+                for (let altWinner = 0; altWinner < judgementsMultiInputs.length; altWinner++) {
+                    sumPotJudg += potJudgAcc[altWinner][crit][alt][judgIdx];
+                }
+
+                // Compute entropy for this criterion and preference index
+                let entropy = 0;
+                if (sumPotJudg > 0) {
+                    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
+                        const p = potJudgAcc[altWinner][crit][alt][judgIdx] / sumPotJudg;
+                        if (p > 0) {
+                            entropy -= p * Math.log2(p);
+                        }
+                    }
+                }
+                judgementEntropy[crit][alt][judgIdx] = entropy;
+            }
+        }
+
+    }
+    return judgementEntropy;
+}
+
+// --- preference statistics
+const initializePrefAcceptability = (prefCircumstanceCounter: number[][][]): number[][][] => {
+
+    let prefAcceptability: number[][][] = [];
+
+    // console.log('pref circ c:',prefCircumstanceCounter);
+    // console.log('num Alts', prefCircumstanceCounter.length);
+    // console.log('num criteria', prefCircumstanceCounter[0].length);
+    // console.log('pref idx', prefCircumstanceCounter[0][0].length);
+
+    for (let altWinner = 0; altWinner < prefCircumstanceCounter.length; altWinner++) {
+        prefAcceptability[altWinner] = [];
+
+        for (let crit = 0; crit < prefCircumstanceCounter[altWinner].length; crit++) {
+            prefAcceptability[altWinner][crit] = [];
+
+            for (let prefIdx = 0; prefIdx < prefCircumstanceCounter[altWinner][crit].length; prefIdx++) {
+                prefAcceptability[altWinner][crit][prefIdx] = 0;
+            }
+        }
+    }
+
+    return prefAcceptability;
+}
+
+// compute current pref acceptability (= preferenceCounter/k)
+// calculates current acceptability by normalizing counts over kMonteCarlo
+// -> becomes probability/distribution
+function computeCurrentPrefAcceptability(prefCircumstanceCounter: number[][][], kMonteCarlo: number): number[][][] {
+
+    let currentPrefAcceptability = initializePrefAcceptability(prefCircumstanceCounter);
+
+    for (let altWinner = 0; altWinner < prefCircumstanceCounter.length; altWinner++) {
+
+        for (let crit = 0; crit < prefCircumstanceCounter[altWinner].length; crit++) {
+
+            for (let prefIdx = 0; prefIdx < prefCircumstanceCounter[altWinner][crit].length; prefIdx++) {
+                currentPrefAcceptability[altWinner][crit][prefIdx] = prefCircumstanceCounter[altWinner][crit][prefIdx] / kMonteCarlo;
+            }
+        }
+    }
+
+    return currentPrefAcceptability;
+}
+
+// compute potential preference acceptability (for each pot preference acceptability sum up that preference acceptability from each aWinner and compute pot preference acc/sum)
+// normalizes current acceptability across alternatives for each preference
+// -> normalized probability/distribution
+function computePotentialPrefAcceptability(currPrefAcceptability: number[][][], prefCircumstanceCounter: number[][][]): number[][][] {
+
+    // shallow copy
+    const currPrefAcc = currPrefAcceptability;
+    let potentialPrefAcceptability = initializePrefAcceptability(prefCircumstanceCounter);
+
+
+    // error handling
+    if (isNaN(currPrefAcc[0][0][0]) || !isFinite(currPrefAcc[0][0][0])) {
+        console.log('potential preference acceptability is NaN or infinity');
+        return potentialPrefAcceptability;
+    }
+
+
+    /*let sums = initializePreferenceEntropy(); // is 2-dim array
+    // sum up current potential acceptability over all altWinners
+    for (let crit = 0; crit < sums.length; crit++) {
+        for (let prefIdx = 0; prefIdx < sums[crit].length; prefIdx++) {
+
+        }
+    }*/
+
+    for (let altWinner = 0; altWinner < prefCircumstanceCounter.length; altWinner++) {
+
+        for (let crit = 0; crit < prefCircumstanceCounter[altWinner].length; crit++) {
+
+            for (let prefIdx = 0; prefIdx < prefCircumstanceCounter[altWinner][crit].length; prefIdx++) {
+
+                // sum for normalization
+                let sum = 0;
+                for (let alt = 0; alt < prefCircumstanceCounter.length; alt++) {
+                    sum += currPrefAcc[alt][crit][prefIdx];
+                }
+
+                potentialPrefAcceptability[altWinner][crit][prefIdx] = currPrefAcc[altWinner][crit][prefIdx] / sum;
+            }
+        }
+    }
+
+    return potentialPrefAcceptability;
+}
+
+const initializePreferenceEntropy = (preferenceMultiInputs: number[][]): number[][] => {
+    let prefEntropy: number[][] = [];
+
+    for (let crit = 0; crit < preferenceMultiInputs.length; crit++) {
+        prefEntropy[crit] = [];
+        for (let prefIdx = 0; prefIdx < preferenceMultiInputs[crit].length; prefIdx++) {
+            prefEntropy[crit][prefIdx] = 0;
+        }
+    }
+
+    return prefEntropy;
+}
+
+// loop over potential pref acceptability and compute preference entropy
+// calculates Shannon entropy for the potential preference acceptability distributions
+function computePreferenceEntropy(potPrefAcceptability: number[][][], preferenceMultiInputs: number[][], prefCircumstanceCounter: number[][][]): number[][] {
+    const potPrefAcc = potPrefAcceptability;
+    let preferenceEntropy: number[][] = initializePreferenceEntropy(preferenceMultiInputs);
+
+
+    for (let crit = 0; crit < preferenceMultiInputs.length; crit++) {
+
+        for (let prefIdx = 0; prefIdx < preferenceMultiInputs[crit].length; prefIdx++) {
+
+            let sumPotPref = 0;
+            for (let altWinner = 0; altWinner < prefCircumstanceCounter.length; altWinner++) {
+                sumPotPref += potPrefAcc[altWinner][crit][prefIdx];
+            }
+
+            // Compute entropy for this criterion and preference index
+            let entropy = 0;
+            if (sumPotPref > 0) {
+                for (let altWinner = 0; altWinner < prefCircumstanceCounter.length; altWinner++) {
+                    const p = potPrefAcc[altWinner][crit][prefIdx] / sumPotPref;
+                    if (p > 0) {
+                        entropy -= p * Math.log2(p);
+                    }
+                }
+            }
+            preferenceEntropy[crit][prefIdx] = entropy;
+        }
+    }
+    return preferenceEntropy;
 }
