@@ -1,39 +1,12 @@
 import {DataGrid, GridCellParams, GridColDef} from "@mui/x-data-grid";
 import {Box, Card, CardContent, CardHeader, Grid} from "@mui/material";
 import {blue} from "@mui/material/colors";
+import {getEntropyColor, getMinAndMax} from "@/lib/utils";
 
 export const PotentialJudgementEntropyDataGrid = ({judgementMultiInputs,potJudgEntropy}:PotentialJudgementEntropyProps) => {
 
-  // Flatten data to find global min and max
-    const allValues = potJudgEntropy.flat().flat();
-    const minValue = Math.min(...allValues);
-    const maxValue = Math.max(...allValues);
-
-    // Function to interpolate color from green to yellow to red
-    // lower number green and higehr number red
-    // for heatmap
-    const getColor = (value: number): string => {
-        // Handle edge cases where minValue == maxValue
-        const ratio = minValue === maxValue ? 0 : (value - minValue) / (maxValue - minValue);
-
-        let red: number, green: number, blue: number = 0;
-
-        if (ratio <= 0.5) {
-            // First half: green to yellow
-            // ratioInSegment goes from 0 to 1
-            const ratioInSegment = ratio / 0.5;
-            red = Math.round(255 * ratioInSegment);
-            green = Math.round(255 * (1-ratioInSegment));
-        } else {
-            // Second half: yellow to red
-            const ratioInSegment = (ratio - 0.5) / 0.5;
-            red = 255;
-            green = Math.round(255 * (1 - ratioInSegment));
-        }
-
-        return `rgb(${red}, ${green}, ${blue})`;
-    };
-
+    // Flatten data to find global min and max
+    const {min, max} = getMinAndMax(potJudgEntropy.flat().flat());
 
     // get max number of judgement inputs
     function getJudgNumber() {
@@ -108,12 +81,15 @@ export const PotentialJudgementEntropyDataGrid = ({judgementMultiInputs,potJudgE
                 headerAlign: "center",
                 renderCell: (params: GridCellParams) => {
                     const value = params.value as number | undefined;
-                    if (typeof value !== 'number') {
-                        return null; // or a placeholder if preferred
-                    }
-                    let backgroundColor = getColor(value);
 
-                    if (value % 1 === 0) { // case: if input is judgement color needs to be based on entropy
+                    // error handling
+                    if (typeof value !== 'number') {
+                        return null;
+                    }
+
+                    let backgroundColor = getEntropyColor(value, min, max);
+
+                    if (value % 1 === 0) { // case: if input is judgement, color needs to be based on entropy
 
                         // identify criterion -> row has a 'criteria' field to identify the criterion
                         const critProperty = params.row.criteria;
@@ -123,7 +99,7 @@ export const PotentialJudgementEntropyDataGrid = ({judgementMultiInputs,potJudgE
 
                         if (critIdx !== null && potJudgEntropy[critIdx][altNum-1][judgIdx]) {
                             const val = potJudgEntropy[critIdx][altNum - 1][judgIdx];
-                            backgroundColor = getColor(val);
+                            backgroundColor = getEntropyColor(val, min, max);
                         }
                     }
 

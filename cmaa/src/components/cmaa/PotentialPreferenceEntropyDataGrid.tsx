@@ -1,40 +1,15 @@
 import {Box, Card, CardContent, CardHeader, Grid} from "@mui/material";
 import {DataGrid, GridCellParams, GridColDef} from "@mui/x-data-grid";
 import {blue} from "@mui/material/colors";
+import {getEntropyColor, getMinAndMax} from "@/lib/utils";
 
 export const PotentialPreferenceEntropyDataGrid = ({
                                                        prefsMultiInputs,
                                                        potPrefsEntropy
                                                    }: PotentialPreferenceEntropyProps) => {
 // Flatten data to find global min and max
-    const allValues = potPrefsEntropy.flat();
-    const minValue = Math.min(...allValues);
-    const maxValue = Math.max(...allValues);
+    const {min, max} = getMinAndMax(potPrefsEntropy.flat());
 
-
-    // Function to interpolate color from green to yellow to red
-    // for heatmap
-    const getColor = (value: number): string => {
-        // Handle edge cases where minValue == maxValue
-        const ratio = minValue === maxValue ? 0 : (value - minValue) / (maxValue - minValue);
-
-        let red: number, green: number, blue: number = 0;
-
-        if (ratio <= 0.5) {
-            // First half: green to yellow
-            // ratioInSegment goes from 0 to 1
-            const ratioInSegment = ratio / 0.5;
-            red = Math.round(255 * ratioInSegment);
-            green = Math.round(255 * (1-ratioInSegment));
-        } else {
-            // Second half: yellow to red
-            const ratioInSegment = (ratio - 0.5) / 0.5;
-            red = 255;
-            green = Math.round(255 * (1 - ratioInSegment));
-        }
-
-        return `rgb(${red}, ${green}, ${blue})`;
-    };
 
     function generatePrefCols() {
         // get number of preferences
@@ -63,10 +38,12 @@ export const PotentialPreferenceEntropyDataGrid = ({
                 maxWidth: 150,
                 renderCell: (params: GridCellParams) => {
                     const value = params.value as number | undefined;
+                    //error handling
                     if (typeof value !== 'number') {
-                        return null; // or a placeholder if preferred
+                        return null;
                     }
-                    let backgroundColor = getColor(value);
+
+                    let backgroundColor = getEntropyColor(value, min, max);
 
                     if (value % 1 === 0) { // case: if input is preferences, color needs to be based on entropy
 
@@ -78,7 +55,7 @@ export const PotentialPreferenceEntropyDataGrid = ({
 
                         if (critIdx !== null && potPrefsEntropy[critIdx]) {
                             const val = potPrefsEntropy[critIdx][prefIndex] as number;
-                            backgroundColor = getColor(val);
+                            backgroundColor = getEntropyColor(val, min, max);
                         }
                     }
 
