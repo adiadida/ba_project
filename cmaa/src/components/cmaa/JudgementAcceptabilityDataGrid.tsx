@@ -1,5 +1,6 @@
 import {DataGrid, GridCellParams, GridColDef} from "@mui/x-data-grid";
 import {Box, Card, CardContent, CardHeader, Grid} from "@mui/material";
+import {getAcceptabilityColor, getMinAndMax} from "@/lib/utils";
 
 export const JudgementAcceptabilityDataGrid = ({
                                                    isCurrent,
@@ -9,36 +10,7 @@ export const JudgementAcceptabilityDataGrid = ({
                                                }: JudgementAcceptabilityProps) => {
 
     // Flatten data to find global min and max
-    const allValues = judgementAcceptability.flat().flat();
-    const minValue = Math.min(...allValues);
-    const maxValue = Math.max(...allValues);
-
-    // Function to interpolate color from green to yellow to red
-    // higher number green and lower number red
-    // for heatmap
-    const getColor = (value: number): string => {
-        // Handle edge cases where minValue == maxValue
-        const ratio = minValue === maxValue ? 0 : (value - minValue) / (maxValue - minValue);
-        // Invert the ratio so that higher values are green
-        const invertedRatio = 1 - ratio;
-
-        let red: number, green: number, blue: number = 0;
-
-        if (invertedRatio <= 0.5) {
-            // First half: green to yellow
-            // ratioInSegment goes from 0 to 1
-            const ratioInSegment = invertedRatio / 0.5;
-            red = Math.round(255 * ratioInSegment);
-            green = 255;
-        } else {
-            // Second half: yellow to red
-            const ratioInSegment = (invertedRatio - 0.5) / 0.5;
-            red = 255;
-            green = Math.round(255 * (1 - ratioInSegment));
-        }
-
-        return `rgb(${red}, ${green}, ${blue})`;
-    };
+    const {min, max}= getMinAndMax(judgementAcceptability.flat().flat());
 
 
     // get max number of judgement inputs
@@ -115,10 +87,11 @@ export const JudgementAcceptabilityDataGrid = ({
                 headerAlign: "center",
                 renderCell: (params: GridCellParams) => {
                     const value = params.value as number | undefined;
+                    //error handling
                     if (typeof value !== 'number') {
-                        return null; // or a placeholder if preferred
+                        return null;
                     }
-                    let backgroundColor = getColor(value);
+                    let backgroundColor = getAcceptabilityColor(value, min, max);
 
                     if (value >= 1) { // case: if input is preferences color needs to be based on preferenceAcceptability
 
@@ -131,7 +104,7 @@ export const JudgementAcceptabilityDataGrid = ({
                         if (critIdx !== null && judgementAcceptability[critIdx][altNum-1][judgIdx]) {
                             const val = judgementAcceptability[critIdx][altNum - 1][judgIdx];
                             //console.log('val', val)
-                            backgroundColor = getColor(val);
+                            backgroundColor = getAcceptabilityColor(val, min, max);
                         }
                     }
 
