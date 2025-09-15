@@ -58,6 +58,12 @@ export default function CAAPage() {
     const handlePreferenceChange = (newPrefs: number[][]) => setEditedPrefs(newPrefs);
     const handleJudgementChange = (newJudgements: number[][][]) => setEditedJudgements(newJudgements);
 
+    // states for recommendations
+    const [prefConsensusRec, setPrefConsensusRec] = useState<number[]>([]);
+    const [judgConsensusRec, setJudgConsensusRec] = useState<number[][]>([]);
+    const [prefDevelopmentRec, setPrefDevelopmentRec] = useState<number[][]>([]);
+    const [judgDevelopmentRec, setJudgDevelopmentRec] = useState<number[][][]>([]);
+
     // compute data for first render
     useEffect(() => {
 
@@ -91,6 +97,10 @@ export default function CAAPage() {
         // for UI
         let winner: number;
         let chance: number;
+        let prefConsensusRec: number[];
+        let judgConsensusRec: number[][];
+        let prefDevelopmentRec: number[][];
+        let judgDevelopmentRec: number[][][];
 
         // execute CMAA algorithm when all input parameters are properly set
         ({
@@ -99,7 +109,11 @@ export default function CAAPage() {
             rankAcceptabilityIndices,
             preferencesCircumstanceCounter,
             judgementsCircumstanceCounter,
-            rankAcceptabilityCounter
+            rankAcceptabilityCounter,
+            prefConsensusRec,
+            judgConsensusRec,
+            prefDevelopmentRec,
+            judgDevelopmentRec
         } = cMAA(
             aggregatedJudgements,
             aggregatedPreferences,
@@ -124,6 +138,11 @@ export default function CAAPage() {
         setChanceWinner(chance);
         setEditedPrefs(preferencesMultiInputs);
         setEditedJudgements(judgementsMultiInputs);
+        // recommendations
+        setPrefConsensusRec(prefConsensusRec);
+        setJudgConsensusRec(judgConsensusRec);
+        setPrefDevelopmentRec(prefDevelopmentRec);
+        setJudgDevelopmentRec(judgDevelopmentRec);
 
     }, [searchParams]);
 
@@ -184,6 +203,10 @@ export default function CAAPage() {
         // information for UI
         let winner: number;
         let chance: number;
+        let prefConsensusRec: number[];
+        let judgConsensusRec: number[][];
+        let prefDevelopmentRec: number[][];
+        let judgDevelopmentRec: number[][][];
 
         // execute CMAA algorithm when all input parameters are properly set
         ({
@@ -192,7 +215,11 @@ export default function CAAPage() {
             rankAcceptabilityIndices,
             preferencesCircumstanceCounter,
             judgementsCircumstanceCounter,
-            rankAcceptabilityCounter
+            rankAcceptabilityCounter,
+            prefConsensusRec,
+            judgConsensusRec,
+            prefDevelopmentRec,
+            judgDevelopmentRec
         } = cMAA(
             aggregatedJudgements,
             aggregatedPreferences,
@@ -216,6 +243,11 @@ export default function CAAPage() {
         judgementsCircumstanceCounterRef.current = judgementsCircumstanceCounter;
         setAlternativeWinner(winner);
         setChanceWinner(chance);
+        // recommendations
+        setPrefConsensusRec(prefConsensusRec);
+        setJudgConsensusRec(judgConsensusRec);
+        setPrefDevelopmentRec(prefDevelopmentRec);
+        setJudgDevelopmentRec(judgDevelopmentRec);
 
         // update stepCounter for number of clarification conferences
         setStepCounter(stepCounter + 1);
@@ -316,7 +348,11 @@ export default function CAAPage() {
         rankAcceptabilityIndices: number[][],
         preferencesCircumstanceCounter: number[][][],
         judgementsCircumstanceCounter: number[][][][],
-        rankAcceptabilityCounter: number[][]
+        rankAcceptabilityCounter: number[][],
+        prefConsensusRec: number[],
+        judgConsensusRec: number[][],
+        prefDevelopmentRec: number[][],
+        judgDevelopmentRec: number[][][]
     } {
         // counters to get conditions for rank 1 from instances
         let preferencesCircumstanceCounter = _preferencesCircumstanceCounter;
@@ -351,10 +387,20 @@ export default function CAAPage() {
             chance,
             rankAcceptabilityIndices,
             prefEntropy,
-            judgEntropy
+            judgEntropy,
+            prefSensitivities,
+            judgSensitivities
         } = createStatistics(rankAcceptabilityCounter, kMonteCarlo, decisionMakerData, preferencesCircumstanceCounter, preferencesMultiInputs, judgementsCircumstanceCounter, judgementsMultiInputs);
         //console.log('rankAcceptabilityCounter ', rankAcceptabilityCounter);
         //console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
+
+        const {prefConsensusRecIdx, judgConsensusRecIdx} = getConsensusRecommendation(prefEntropy, judgEntropy);
+        console.log('consensus Rec', prefConsensusRecIdx, judgConsensusRecIdx);
+        const {
+            prefDevelopmentRecArray,
+            judgDevelopmentRecArray
+        } = getDevelopmentRecommendation(prefSensitivities, judgSensitivities)
+        console.log('developmentRec', prefDevelopmentRecArray, judgDevelopmentRecArray);
 
         return {
             winner,
@@ -362,7 +408,11 @@ export default function CAAPage() {
             rankAcceptabilityIndices,
             preferencesCircumstanceCounter,
             judgementsCircumstanceCounter,
-            rankAcceptabilityCounter
+            rankAcceptabilityCounter,
+            prefConsensusRec: prefConsensusRecIdx,
+            judgConsensusRec: judgConsensusRecIdx,
+            prefDevelopmentRec: prefDevelopmentRecArray,
+            judgDevelopmentRec: judgDevelopmentRecArray
         };
     }
 
@@ -559,12 +609,23 @@ export default function CAAPage() {
 
                     )}
 
-                {aggregatedJudgements && aggregatedJudgements.length > 0 && aggregatedPreferences && aggregatedPreferences.length > 0 && (
-                    <Recommendations
-                        aggPrefs={aggregatedPreferences}
-                        aggJudgements={aggregatedJudgements}
-                    />
-                )}
+                <Grid container size={12} margin={1} alignItems={"center"}>
+                    {aggregatedJudgements && aggregatedJudgements.length > 0 && aggregatedPreferences && aggregatedPreferences.length > 0 && (
+
+                        <GenericAccordion title={'Schritt 1: Konflikt auswählen und diskutieren'} child={
+                            <Grid container size={12}>
+                                {/*<Recommendations
+                                    aggPrefs={aggregatedPreferences}
+                                    aggJudgements={aggregatedJudgements}
+                                    prefConsensusRec={prefConsensusRec}
+                                    judgConsensusRec={judgConsensusRec}
+                                    prefDevelopmentRec={prefDevelopmentRec}
+                                    judgDevelopmentRec={judgDevelopmentRec}
+                                />*/}
+                            </Grid>}
+                        />
+                    )}
+                </Grid>
 
                 <Grid container size={12} margin={1} alignItems={"center"}>
                     {/*todo check why alternativeWinner and chanceWinner isnt always right*/}
@@ -1139,6 +1200,8 @@ function createStatistics(rankAcceptabilityCounter: number[][], kMC: number,
     currentJudgAcceptabilities: number[][][][],
     potentialJudgAcceptabilities: number[][][][],
     judgEntropy: number[][][],
+    prefSensitivities: number[][][],
+    judgSensitivities: number[][][][]
 } {
 
     const rankAcceptabilityIndices = createRankAcceptabilityIndices(decisionMakerData, rankAcceptabilityCounter, kMC)
@@ -1151,6 +1214,12 @@ function createStatistics(rankAcceptabilityCounter: number[][], kMC: number,
     const potentialJudgAcceptabilities = computePotentialJudgAcceptability(currentJudgAcceptabilities, judgCircumstanceCounter);
     const judgEntropy = computeJudgementEntropy(potentialJudgAcceptabilities, judgementsMultiInputs, judgCircumstanceCounter);
 
+    const {
+        prefSensitivities,
+        judgSensitivities
+    } = getSensitivityAnalysis(rankAcceptabilityIndices, prefCircumstanceCounter, potentialPrefAcceptabilities, judgCircumstanceCounter, potentialJudgAcceptabilities)
+
+
     const {winner, chance} = getWinnerAndChance(rankAcceptabilityIndices);
 
     return {
@@ -1162,7 +1231,9 @@ function createStatistics(rankAcceptabilityCounter: number[][], kMC: number,
         prefEntropy,
         currentJudgAcceptabilities,
         potentialJudgAcceptabilities,
-        judgEntropy
+        judgEntropy,
+        prefSensitivities,
+        judgSensitivities,
     }
 
 }
@@ -1491,4 +1562,161 @@ function computePreferenceEntropy(potPrefAcceptability: number[][][], preference
         }
     }
     return preferenceEntropy;
+}
+
+function getSensitivityAnalysis(rankAcceptabilityIndices: number[][], prefCircumstanceCounter: number[][][], potentialPrefAcceptability: number[][][], judgCircumstanceCounter: number[][][][], potentialJudgAcceptability: number[][][][]): {
+    prefSensitivities: number[][][],
+    judgSensitivities: number[][][][]
+} {
+
+    const rankOne = rankAcceptabilityIndices[0];
+
+    // Sensitivity = potential - rank 1 of winnerAlternative --> max
+
+    const prefSensitivities = computePrefSensitivity(rankOne, prefCircumstanceCounter, potentialPrefAcceptability);
+
+    const judgSensitivities = computeJudgSensitivity(rankOne, judgCircumstanceCounter, potentialJudgAcceptability);
+
+    return {prefSensitivities, judgSensitivities}
+}
+
+function computePrefSensitivity(rankOne: number[], prefCircumstanceCounter: number[][][], potentialPrefAcceptability: number[][][]): number[][][] {
+    const prefSensitivities = initializePrefAcceptability(prefCircumstanceCounter);
+
+    for (let altWinner = 0; altWinner < potentialPrefAcceptability.length; altWinner++) {
+        for (let criterion = 0; criterion < potentialPrefAcceptability[altWinner].length; criterion++) {
+            for (let prefIdx = 0; prefIdx < potentialPrefAcceptability[altWinner][criterion].length; prefIdx++) {
+                prefSensitivities[altWinner][criterion][prefIdx] = potentialPrefAcceptability[altWinner][criterion][prefIdx] - rankOne[altWinner];
+            }
+        }
+    }
+
+    return prefSensitivities;
+}
+
+function computeJudgSensitivity(rankOne: number[], judgCircumstanceCounter: number[][][][], potentialJudgAcceptability: number[][][][]): number[][][][] {
+    const judgSensitivities: number[][][][] = initializeJudgementAcceptability(judgCircumstanceCounter);
+
+    for (let altWinner = 0; altWinner < potentialJudgAcceptability.length; altWinner++) {
+        for (let criterion = 0; criterion < potentialJudgAcceptability[altWinner].length; criterion++) {
+            for (let alternative = 0; alternative < potentialJudgAcceptability[altWinner][criterion].length; alternative++) {
+                for (let judgIdx = 0; judgIdx < potentialJudgAcceptability[altWinner][criterion][alternative].length; judgIdx++) {
+                    judgSensitivities[altWinner][criterion][alternative][judgIdx] = potentialJudgAcceptability[altWinner][criterion][alternative][judgIdx] - rankOne[altWinner];
+                }
+            }
+
+        }
+    }
+
+    return judgSensitivities;
+}
+
+function getConsensusRecommendation(prefEntropy: number[][], judgEntropy: number[][][]): {
+    prefConsensusRecIdx: number[];
+    judgConsensusRecIdx: number[][];
+} {
+    const prefValues = prefEntropy.flat();
+    const prefRec = getBestThree(prefValues);
+
+    // rank of entropy  in implicit criterion
+    const prefRecIdx: number[] = getPrefRecIdxArray(prefRec, prefEntropy);
+    console.log('pref rec', prefRec, prefRecIdx)
+
+
+    const judgValues = judgEntropy.flat().flat();
+    const judgRec = getBestThree(judgValues);
+
+    // rank of entropy in implicit  criterion, alternative
+    const judgRecIdx: number[][] = getJudgRecIdxArray(judgRec, judgEntropy);
+    console.log('judg rec', judgRec, judgRecIdx);
+
+    return {prefConsensusRecIdx: prefRecIdx, judgConsensusRecIdx: judgRecIdx}
+}
+
+function getBestThree(values: number[]): number[] {
+    // sort shallow copy of values ascending
+    const sorted = [...values].sort((n1, n2) => n1 - n2);
+    //console.log(values);
+    let bestThree: number[] = sorted.slice(0, 3);
+    //console.log(getBestThree);
+    return bestThree;
+}
+
+function getPrefRecIdxArray(prefRec: number[], prefStatistics: number[][]): number[] {
+    // find criterion and write corresponding rank in implicit critidx
+    const prefRecIdx: number[] = Array(prefStatistics.length).fill(0);
+
+    for (let recommendation = 0; recommendation < prefRec.length; recommendation++) {
+        for (let criterion = 0; criterion < prefStatistics.length; criterion++) {
+            for (let prefIdx = 0; prefIdx < prefStatistics[criterion].length; prefIdx++) {
+                if (prefRec[recommendation] === prefStatistics[criterion][prefIdx]) {
+                    prefRecIdx[criterion] = recommendation + 1;
+                }
+            }
+        }
+    }
+
+    return prefRecIdx;
+}
+
+function getJudgRecIdxArray(judgRec: number[], judgStatistics: number[][][]): number[][] {
+    // find criterion and alternative and write corresponding rank in implicit critidx, altidx
+    const judgRecIdx: number[][] = Array.from({length: judgStatistics.length}, () => Array(judgStatistics[0].length).fill(0));
+
+    for (let recommendation = 0; recommendation < judgRec.length; recommendation++) {
+        for (let criterion = 0; criterion < judgStatistics.length; criterion++) {
+            for (let alternative = 0; alternative < judgStatistics[criterion].length; alternative++) {
+                for (let judgIdx = 0; judgIdx < judgStatistics[criterion].length; judgIdx++) {
+                    if (judgRec[recommendation] === judgStatistics[criterion][alternative][judgIdx]) {
+                        judgRecIdx[criterion][alternative] = recommendation + 1;
+                    }
+                }
+            }
+
+        }
+    }
+
+    return judgRecIdx;
+}
+
+
+// folgender Konflikt hat starke Auswirkungen auf den Platz der Alternative
+//höchster Betrag SensivityAnalysis -> negative = rank 1 of alternative worse, positive = rank 1 of alternative better
+// offen für Ausblick: Auflösungen vergleichend betrachten, z.B. Differenz etc.
+function getDevelopmentRecommendation(prefSensitivities: number[][][], judgSensitivities: number[][][][]): {
+    prefDevelopmentRecArray: number[][],
+    judgDevelopmentRecArray: number[][][]
+} {
+    const numAlts = prefSensitivities.length;
+    let prefRec = 0;
+    let prefRecIdx: number[] = [];
+    const prefRecArray: number[][] = [];
+
+    let judgRec = 0;
+    let judgRecIdx: number[][] = [];
+    const judgRecArray: number[][][] = [];
+
+    // get recommendations for alternatives
+    for (let altWinner = 0; altWinner < numAlts; altWinner++) {
+        prefRec = getBest(prefSensitivities[altWinner].flat());
+        prefRecIdx = getPrefRecIdxArray(prefRec, prefSensitivities[altWinner]);
+        console.log('prefRec for alternative', altWinner, prefRec, prefRecIdx);
+        prefRecArray.push(prefRecIdx); // push index array for recommendation
+
+        judgRec = getBest(judgSensitivities[altWinner].flat().flat());
+        judgRecIdx = getJudgRecIdxArray(judgRec, judgSensitivities[altWinner]);
+        console.log('judgRec for alternative', altWinner, judgRec, judgRecIdx);
+        judgRecArray.push(judgRecIdx); // push index array for recommendation
+    }
+
+    return {prefDevelopmentRecArray: prefRecArray, judgDevelopmentRecArray: judgRecArray}
+}
+
+function getBest(values: number[]) {
+    // sort shallow copy of values descending
+    const sorted = [...values].sort((n1, n2) => Math.abs(n2) - Math.abs(n1));
+    //console.log('sorted values',sorted);
+    const best = sorted.slice(0, 1);
+
+    return best;
 }
