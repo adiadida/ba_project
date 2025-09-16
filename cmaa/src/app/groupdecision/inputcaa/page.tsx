@@ -395,12 +395,11 @@ export default function CAAPage() {
         //console.log('rankAcceptabilityIndices ', rankAcceptabilityIndices);
 
         const {prefConsensusRecIdx, judgConsensusRecIdx} = getConsensusRecommendation(prefEntropy, judgEntropy);
-        console.log('consensus Rec', prefConsensusRecIdx, judgConsensusRecIdx);
+
         const {
             prefDevelopmentRecArray,
             judgDevelopmentRecArray
         } = getDevelopmentRecommendation(prefSensitivities, judgSensitivities)
-        console.log('developmentRec', prefDevelopmentRecArray, judgDevelopmentRecArray);
 
         return {
             winner,
@@ -614,21 +613,20 @@ export default function CAAPage() {
 
                         <GenericAccordion title={'Schritt 1: Konflikt auswählen und diskutieren'} child={
                             <Grid container size={12}>
-                                {/*<Recommendations
+                                <Recommendations
                                     aggPrefs={aggregatedPreferences}
                                     aggJudgements={aggregatedJudgements}
                                     prefConsensusRec={prefConsensusRec}
                                     judgConsensusRec={judgConsensusRec}
                                     prefDevelopmentRec={prefDevelopmentRec}
                                     judgDevelopmentRec={judgDevelopmentRec}
-                                />*/}
+                                />
                             </Grid>}
                         />
                     )}
                 </Grid>
 
                 <Grid container size={12} margin={1} alignItems={"center"}>
-                    {/*todo check why alternativeWinner and chanceWinner isnt always right*/}
                     {judgementsMultiInputs.length > 0 && preferencesMultiInputs.length > 0 && (
 
                         <GenericAccordion title={'Schritt 2: Ergebnis der Konflikt-Klärung festhalten'} child={
@@ -1290,154 +1288,11 @@ function getWinnerAndChance(rankAcceptabilityIndices: number[][]): {
     return {winner, chance};
 }
 
-// --- judgement statistics
-function initializeJudgementAcceptability(judgCircumstanceCounter: number[][][][]): number[][][][] {
-    let judgAcceptability: number[][][][] = [];
-
-    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
-        judgAcceptability[altWinner] = [];
-
-        for (let crit = 0; crit < judgCircumstanceCounter[altWinner].length; crit++) {
-            judgAcceptability[altWinner][crit] = [];
-
-            for (let alt = 0; alt < judgCircumstanceCounter[altWinner][crit].length; alt++) {
-                judgAcceptability[altWinner][crit][alt] = [];
-
-                for (let judgIdx = 0; judgIdx < judgCircumstanceCounter[altWinner][crit][alt].length; judgIdx++) {
-                    judgAcceptability[altWinner][crit][alt][judgIdx] = 0;
-                }
-            }
-        }
-    }
-
-    return judgAcceptability;
-}
-
-// calculates current acceptability by normalizing counts over kMonteCarlo
-// -> becomes probability/distribution
-function computeCurrentJudgAcceptability(judgCircumstanceCounter: number[][][][], kMonteCarlo: number): number[][][][] {
-
-    let currentJudgAcceptability: number[][][][] = initializeJudgementAcceptability(judgCircumstanceCounter);
-
-    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
-
-        for (let crit = 0; crit < judgCircumstanceCounter[altWinner].length; crit++) {
-
-            for (let alt = 0; alt < judgCircumstanceCounter[altWinner][crit].length; alt++) {
-
-                for (let judgIdx = 0; judgIdx < judgCircumstanceCounter[altWinner][crit][alt].length; judgIdx++) {
-                    currentJudgAcceptability[altWinner][crit][alt][judgIdx] = judgCircumstanceCounter[altWinner][crit][alt][judgIdx] / kMonteCarlo;
-
-                }
-            }
-
-        }
-    }
-    return currentJudgAcceptability;
-}
-
-// normalizes current acceptability across alternatives for each preference
-// -> normalized probability/distribution
-function computePotentialJudgAcceptability(currJudgAcceptability: number[][][][], judgCircumstanceCounter: number[][][][]): number[][][][] {
-
-    const currJudgAcc = currJudgAcceptability;
-    let potentialJudgAcceptability = initializeJudgementAcceptability(judgCircumstanceCounter);
-
-
-    // error handling
-    if (isNaN(currJudgAcc[0][0][0][0]) || !isFinite(currJudgAcc[0][0][0][0])) {
-        console.log('potential preference acceptability is NaN or infinity');
-        return potentialJudgAcceptability;
-    }
-
-    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
-
-        for (let crit = 0; crit < judgCircumstanceCounter[altWinner].length; crit++) {
-
-            for (let alt = 0; alt < judgCircumstanceCounter[altWinner][crit].length; alt++) {
-
-                for (let judgIdx = 0; judgIdx < judgCircumstanceCounter[altWinner][crit][alt].length; judgIdx++) {
-
-                    // sum for normalization
-                    let sum = 0;
-                    for (let aWinner = 0; aWinner < judgCircumstanceCounter.length; aWinner++) {
-                        sum += currJudgAcc[aWinner][crit][alt][judgIdx];
-                    }
-
-                    potentialJudgAcceptability[altWinner][crit][alt][judgIdx] = currJudgAcc[altWinner][crit][alt][judgIdx] / sum;
-
-                }
-            }
-        }
-    }
-
-    return potentialJudgAcceptability;
-}
-
-const initializeJudgementEntropy = (judgementsMultiInputs: number[][][]): number[][][] => {
-    let judgEntropy: number[][][] = [];
-
-    for (let crit = 0; crit < judgementsMultiInputs.length; crit++) {
-        judgEntropy[crit] = [];
-        for (let alt = 0; alt < judgementsMultiInputs[crit].length; alt++) {
-            judgEntropy[crit][alt] = [];
-            for (let judgIdx = 0; judgIdx < judgementsMultiInputs[crit][alt].length; judgIdx++) {
-                judgEntropy[crit][alt][judgIdx] = 0;
-            }
-        }
-
-    }
-
-    return judgEntropy;
-}
-
-// loop over potential pref acceptability and compute judgement entropy
-// calculates Shannon entropy for the potential judgement acceptability distributions
-function computeJudgementEntropy(potJudgAcceptability: number[][][][], judgementsMultiInputs: number[][][], judgCircumstanceCounter: number[][][][]) {
-    // shallow copy
-    const potJudgAcc = potJudgAcceptability;
-    let judgementEntropy: number[][][] = initializeJudgementEntropy(judgementsMultiInputs);
-
-
-    for (let crit = 0; crit < judgementsMultiInputs.length; crit++) {
-
-        for (let alt = 0; alt < judgementsMultiInputs[crit].length; alt++) {
-
-            for (let judgIdx = 0; judgIdx < judgementsMultiInputs[crit][alt].length; judgIdx++) {
-
-
-                let sumPotJudg = 0;
-                for (let altWinner = 0; altWinner < judgementsMultiInputs.length; altWinner++) {
-                    sumPotJudg += potJudgAcc[altWinner][crit][alt][judgIdx];
-                }
-
-                // Compute entropy for this criterion and preference index
-                let entropy = 0;
-                if (sumPotJudg > 0) {
-                    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
-                        const p = potJudgAcc[altWinner][crit][alt][judgIdx] / sumPotJudg;
-                        if (p > 0) {
-                            entropy -= p * Math.log2(p);
-                        }
-                    }
-                }
-                judgementEntropy[crit][alt][judgIdx] = entropy;
-            }
-        }
-
-    }
-    return judgementEntropy;
-}
-
 // --- preference statistics
 const initializePrefAcceptability = (prefCircumstanceCounter: number[][][]): number[][][] => {
 
     let prefAcceptability: number[][][] = [];
 
-    // console.log('pref circ c:',prefCircumstanceCounter);
-    // console.log('num Alts', prefCircumstanceCounter.length);
-    // console.log('num criteria', prefCircumstanceCounter[0].length);
-    // console.log('pref idx', prefCircumstanceCounter[0][0].length);
 
     for (let altWinner = 0; altWinner < prefCircumstanceCounter.length; altWinner++) {
         prefAcceptability[altWinner] = [];
@@ -1564,6 +1419,145 @@ function computePreferenceEntropy(potPrefAcceptability: number[][][], preference
     return preferenceEntropy;
 }
 
+// --- judgement statistics
+function initializeJudgementAcceptability(judgCircumstanceCounter: number[][][][]): number[][][][] {
+    let judgAcceptability: number[][][][] = [];
+
+    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
+        judgAcceptability[altWinner] = [];
+
+        for (let crit = 0; crit < judgCircumstanceCounter[altWinner].length; crit++) {
+            judgAcceptability[altWinner][crit] = [];
+
+            for (let alt = 0; alt < judgCircumstanceCounter[altWinner][crit].length; alt++) {
+                judgAcceptability[altWinner][crit][alt] = [];
+
+                for (let judgIdx = 0; judgIdx < judgCircumstanceCounter[altWinner][crit][alt].length; judgIdx++) {
+                    judgAcceptability[altWinner][crit][alt][judgIdx] = 0;
+                }
+            }
+        }
+    }
+
+    return judgAcceptability;
+}
+
+// calculates current acceptability by normalizing counts over kMonteCarlo
+// -> becomes probability/distribution
+function computeCurrentJudgAcceptability(judgCircumstanceCounter: number[][][][], kMonteCarlo: number): number[][][][] {
+
+    let currentJudgAcceptability: number[][][][] = initializeJudgementAcceptability(judgCircumstanceCounter);
+
+    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
+
+        for (let crit = 0; crit < judgCircumstanceCounter[altWinner].length; crit++) {
+
+            for (let alt = 0; alt < judgCircumstanceCounter[altWinner][crit].length; alt++) {
+
+                for (let judgIdx = 0; judgIdx < judgCircumstanceCounter[altWinner][crit][alt].length; judgIdx++) {
+                    currentJudgAcceptability[altWinner][crit][alt][judgIdx] = judgCircumstanceCounter[altWinner][crit][alt][judgIdx] / kMonteCarlo;
+
+                }
+            }
+
+        }
+    }
+    return currentJudgAcceptability;
+}
+
+// normalizes current acceptability across alternatives for each preference
+// -> normalized probability/distribution
+function computePotentialJudgAcceptability(currJudgAcceptability: number[][][][], judgCircumstanceCounter: number[][][][]): number[][][][] {
+
+    const currJudgAcc = currJudgAcceptability;
+    let potentialJudgAcceptability = initializeJudgementAcceptability(judgCircumstanceCounter);
+
+
+    // error handling
+    if (isNaN(currJudgAcc[0][0][0][0]) || !isFinite(currJudgAcc[0][0][0][0])) {
+        console.log('potential preference acceptability is NaN or infinity');
+        return potentialJudgAcceptability;
+    }
+
+    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
+
+        for (let crit = 0; crit < judgCircumstanceCounter[altWinner].length; crit++) {
+
+            for (let alt = 0; alt < judgCircumstanceCounter[altWinner][crit].length; alt++) {
+
+                for (let judgIdx = 0; judgIdx < judgCircumstanceCounter[altWinner][crit][alt].length; judgIdx++) {
+
+                    // sum for normalization
+                    let sum = 0;
+                    for (let aWinner = 0; aWinner < judgCircumstanceCounter.length; aWinner++) {
+                        sum += currJudgAcc[aWinner][crit][alt][judgIdx];
+                    }
+
+                    potentialJudgAcceptability[altWinner][crit][alt][judgIdx] = currJudgAcc[altWinner][crit][alt][judgIdx] / sum;
+
+                }
+            }
+        }
+    }
+
+    return potentialJudgAcceptability;
+}
+
+const initializeJudgementEntropy = (judgementsMultiInputs: number[][][]): number[][][] => {
+    let judgEntropy: number[][][] = [];
+
+    for (let crit = 0; crit < judgementsMultiInputs.length; crit++) {
+        judgEntropy[crit] = [];
+        for (let alt = 0; alt < judgementsMultiInputs[crit].length; alt++) {
+            judgEntropy[crit][alt] = [];
+            for (let judgIdx = 0; judgIdx < judgementsMultiInputs[crit][alt].length; judgIdx++) {
+                judgEntropy[crit][alt][judgIdx] = 0;
+            }
+        }
+
+    }
+
+    return judgEntropy;
+}
+
+// loop over potential pref acceptability and compute judgement entropy
+// calculates Shannon entropy for the potential judgement acceptability distributions
+function computeJudgementEntropy(potJudgAcceptability: number[][][][], judgementsMultiInputs: number[][][], judgCircumstanceCounter: number[][][][]) {
+    // shallow copy
+    const potJudgAcc = potJudgAcceptability;
+    let judgementEntropy: number[][][] = initializeJudgementEntropy(judgementsMultiInputs);
+
+
+    for (let crit = 0; crit < judgementsMultiInputs.length; crit++) {
+
+        for (let alt = 0; alt < judgementsMultiInputs[crit].length; alt++) {
+
+            for (let judgIdx = 0; judgIdx < judgementsMultiInputs[crit][alt].length; judgIdx++) {
+
+
+                let sumPotJudg = 0;
+                for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
+                    sumPotJudg += potJudgAcc[altWinner][crit][alt][judgIdx];
+                }
+
+                // Compute entropy for this criterion and preference index
+                let entropy = 0;
+                if (sumPotJudg > 0) {
+                    for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
+                        const p = potJudgAcc[altWinner][crit][alt][judgIdx] / sumPotJudg;
+                        if (p > 0) {
+                            entropy -= p * Math.log2(p);
+                        }
+                    }
+                }
+                judgementEntropy[crit][alt][judgIdx] = entropy;
+            }
+        }
+
+    }
+    return judgementEntropy;
+}
+
 function getSensitivityAnalysis(rankAcceptabilityIndices: number[][], prefCircumstanceCounter: number[][][], potentialPrefAcceptability: number[][][], judgCircumstanceCounter: number[][][][], potentialJudgAcceptability: number[][][][]): {
     prefSensitivities: number[][][],
     judgSensitivities: number[][][][]
@@ -1615,36 +1609,33 @@ function getConsensusRecommendation(prefEntropy: number[][], judgEntropy: number
     prefConsensusRecIdx: number[];
     judgConsensusRecIdx: number[][];
 } {
+
     const prefValues = prefEntropy.flat();
-    const prefRec = getBestThree(prefValues);
+    const prefRec = getBestThreePlusBackupThree(prefValues);
 
     // rank of entropy  in implicit criterion
     const prefRecIdx: number[] = getPrefRecIdxArray(prefRec, prefEntropy);
-    console.log('pref rec', prefRec, prefRecIdx)
-
 
     const judgValues = judgEntropy.flat().flat();
-    const judgRec = getBestThree(judgValues);
+    const judgRec = getBestThreePlusBackupThree(judgValues);
 
     // rank of entropy in implicit  criterion, alternative
     const judgRecIdx: number[][] = getJudgRecIdxArray(judgRec, judgEntropy);
-    console.log('judg rec', judgRec, judgRecIdx);
 
     return {prefConsensusRecIdx: prefRecIdx, judgConsensusRecIdx: judgRecIdx}
 }
 
-function getBestThree(values: number[]): number[] {
+function getBestThreePlusBackupThree(values: number[]): number[] {
     // sort shallow copy of values ascending
     const sorted = [...values].sort((n1, n2) => n1 - n2);
-    //console.log(values);
-    let bestThree: number[] = sorted.slice(0, 3);
-    //console.log(getBestThree);
+    let bestThree: number[] = sorted.slice(0, 6);
     return bestThree;
 }
 
 function getPrefRecIdxArray(prefRec: number[], prefStatistics: number[][]): number[] {
     // find criterion and write corresponding rank in implicit critidx
     const prefRecIdx: number[] = Array(prefStatistics.length).fill(0);
+
 
     for (let recommendation = 0; recommendation < prefRec.length; recommendation++) {
         for (let criterion = 0; criterion < prefStatistics.length; criterion++) {
@@ -1656,7 +1647,27 @@ function getPrefRecIdxArray(prefRec: number[], prefStatistics: number[][]): numb
         }
     }
 
-    return prefRecIdx;
+    // handle case if idx gets overwritten (meaning top 3 come from same conflict)
+    if (prefRec.length > 1) {
+        // Create a new array to hold the top three lowest values
+        const result: number[] = Array(prefStatistics.length).fill(0);
+        // Filter out non-zero values and sort them
+        const nonZeroValues = prefRecIdx.filter(value => value !== 0);
+        const sortedValues = nonZeroValues.sort((a, b) => a - b);
+        // Get the three lowest values
+        const lowestThree = sortedValues.slice(0, 3);
+
+        // Fill the result array with the lowest three values
+        lowestThree.forEach(value => {
+            const index = prefRecIdx.indexOf(value);
+            result[index] = value; // Place the lowest value in the correct position
+        });
+        return result;
+    } else {
+        return prefRecIdx;
+
+    }
+
 }
 
 function getJudgRecIdxArray(judgRec: number[], judgStatistics: number[][][]): number[][] {
@@ -1676,7 +1687,41 @@ function getJudgRecIdxArray(judgRec: number[], judgStatistics: number[][][]): nu
         }
     }
 
-    return judgRecIdx;
+    // handle case if idx gets overwritten (meaning top 3 come from same conflict)
+    if (judgRec.length > 1) {
+        // Create a new array to hold the top three lowest values
+        const result: number[][] = Array.from({length: judgStatistics.length}, () => Array(judgStatistics[0].length).fill(0));
+        // Collect all non-zero values along with their positions
+        const valuePositions: { value: number, criterion: number, alternative: number }[] = [];
+
+        for (let criterion = 0; criterion < judgRecIdx.length; criterion++) {
+            for (let alternative = 0; alternative < judgRecIdx[criterion].length; alternative++) {
+                if (judgRecIdx[criterion][alternative] !== 0) {
+                    valuePositions.push({
+                        value: judgRecIdx[criterion][alternative],
+                        criterion: criterion,
+                        alternative: alternative
+                    });
+                }
+            }
+        }
+
+        // Sort values to find the three lowest
+        valuePositions.sort((a, b) => a.value - b.value);
+        const lowestThree = valuePositions.slice(0, 3);
+
+        // Fill the result array with the lowest three values
+        lowestThree.forEach(item => {
+            result[item.criterion][item.alternative] = item.value; // Place the lowest value in the correct position
+        });
+
+        return result;
+    } else {
+        return judgRecIdx;
+
+    }
+
+
 }
 
 
@@ -1688,11 +1733,11 @@ function getDevelopmentRecommendation(prefSensitivities: number[][][], judgSensi
     judgDevelopmentRecArray: number[][][]
 } {
     const numAlts = prefSensitivities.length;
-    let prefRec = 0;
+    let prefRec: number[] = [];
     let prefRecIdx: number[] = [];
     const prefRecArray: number[][] = [];
 
-    let judgRec = 0;
+    let judgRec: number[] = [];
     let judgRecIdx: number[][] = [];
     const judgRecArray: number[][][] = [];
 
@@ -1700,13 +1745,11 @@ function getDevelopmentRecommendation(prefSensitivities: number[][][], judgSensi
     for (let altWinner = 0; altWinner < numAlts; altWinner++) {
         prefRec = getBest(prefSensitivities[altWinner].flat());
         prefRecIdx = getPrefRecIdxArray(prefRec, prefSensitivities[altWinner]);
-        console.log('prefRec for alternative', altWinner, prefRec, prefRecIdx);
-        prefRecArray.push(prefRecIdx); // push index array for recommendation
+        prefRecArray.push(prefRecIdx); // push to index array for recommendation
 
         judgRec = getBest(judgSensitivities[altWinner].flat().flat());
         judgRecIdx = getJudgRecIdxArray(judgRec, judgSensitivities[altWinner]);
-        console.log('judgRec for alternative', altWinner, judgRec, judgRecIdx);
-        judgRecArray.push(judgRecIdx); // push index array for recommendation
+        judgRecArray.push(judgRecIdx); // push to index array for recommendation
     }
 
     return {prefDevelopmentRecArray: prefRecArray, judgDevelopmentRecArray: judgRecArray}
