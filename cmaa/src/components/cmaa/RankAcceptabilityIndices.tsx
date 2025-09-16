@@ -1,40 +1,12 @@
 import {Box, Grid} from "@mui/material";
 import {DataGrid, GridCellParams, GridColDef} from "@mui/x-data-grid";
+import {getAcceptabilityColor, getMinAndMax} from "@/lib/utils";
 
 
 export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAcceptabilityProps) => {
 
     // Flatten data to find global min and max
-    const allValues = rankAccIdx.flat();
-    const minValue = Math.min(...allValues);
-    const maxValue = Math.max(...allValues);
-
-
-    // Function to interpolate color from green to yellow to red
-    // higher number green and lower number red
-    const getColor = (value: number): string => {
-        // Handle edge cases where minValue == maxValue
-        const ratio = minValue === maxValue ? 0 : (value - minValue) / (maxValue - minValue);
-        // Invert the ratio so that higher values are green
-        const invertedRatio = 1 - ratio;
-
-        let red: number, green: number, blue: number = 0;
-
-        if (invertedRatio <= 0.5) {
-            // First half: green to yellow
-            // ratioInSegment goes from 0 to 1
-            const ratioInSegment = invertedRatio / 0.5;
-            red = Math.round(255 * ratioInSegment);
-            green = 255;
-        } else {
-            // Second half: yellow to red
-            const ratioInSegment = (invertedRatio - 0.5) / 0.5;
-            red = 255;
-            green = Math.round(255 * (1 - ratioInSegment));
-        }
-
-        return `rgb(${red}, ${green}, ${blue})`;
-    };
+    const {min,max}= getMinAndMax(rankAccIdx.flat());
 
     const getSolution = () => {
         //const allValues = rankAccCounter.flat();
@@ -83,7 +55,7 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
             maxWidth: 150,
             renderCell: (params: GridCellParams) => {
                 const value = params.value as number;
-                const backgroundColor = getColor(value);
+                const backgroundColor = getAcceptabilityColor(value, min, max);
                 return (
                     <Box
                         style={{
@@ -162,7 +134,7 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
 
         let width = rows.length*110;
 
-        let extra= 0;
+        let extra;
 
         switch (rows.length) {
             case 1: extra=25; break;
