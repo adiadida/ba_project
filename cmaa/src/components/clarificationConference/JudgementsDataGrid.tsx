@@ -92,7 +92,7 @@ export const JudgementsDataGrid = ({judgementMultiInputs, onJudgementChange}: Ju
         const judgeCols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria',
+                headerName: 'criteria/alternatives',
                 maxWidth: 70,
             }
         ]

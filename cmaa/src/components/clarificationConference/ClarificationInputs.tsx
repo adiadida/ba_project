@@ -19,7 +19,7 @@ export const ClarificationInputs = ({
 
             <Grid container size={12}>
                 <Typography variant={"body2"}>
-                    Es muss mindestens eine Bewertung pro Konflikt erhalten bleiben
+                    Es muss mindestens eine Bewertung pro Konflikt erhalten bleiben, damit die Eingabe richtig übernommen wird!
                 </Typography>
             </Grid>
             <Grid container size={12} spacing={2}>
