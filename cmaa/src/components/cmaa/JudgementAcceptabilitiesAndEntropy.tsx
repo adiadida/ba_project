@@ -9,6 +9,7 @@ export const JudgementAcceptabilitiesAndEntropy = ({
                                                        judgCircumstanceCounter,
                                                        judgMultiInputs
                                                    }: JudgementProps) => {
+    // Ausblick: refactoring + prop management
     // state management
     const [currentJudgAcceptability, setCurrentJudgAcceptability] = useState<number[][][][]>([]);
     const [potentialJudgAcceptability, setPotentialJudgAcceptability] = useState<number[][][][]>([]);
@@ -50,13 +51,13 @@ export const JudgementAcceptabilitiesAndEntropy = ({
         let currentJudgAcceptability = initializeJudgmentAcceptability();
 
         for (let altWinner = 0; altWinner < judgCircumstanceCounter.length; altWinner++) {
-            currentJudgAcceptability[altWinner] = [];
+            //currentJudgAcceptability[altWinner] = [];
 
             for (let crit = 0; crit < judgCircumstanceCounter[altWinner].length; crit++) {
-                currentJudgAcceptability[altWinner][crit] = [];
+               // currentJudgAcceptability[altWinner][crit] = [];
 
                 for (let alt = 0; alt < judgCircumstanceCounter[altWinner][crit].length; alt++) {
-                    currentJudgAcceptability[altWinner][crit][alt] = [];
+                    //currentJudgAcceptability[altWinner][crit][alt] = [];
 
                     for (let judgIdx = 0; judgIdx < judgCircumstanceCounter[altWinner][crit][alt].length; judgIdx++) {
                         currentJudgAcceptability[altWinner][crit][alt][judgIdx] = judgCircumstanceCounter[altWinner][crit][alt][judgIdx] / kMonteCarlo;
@@ -66,7 +67,6 @@ export const JudgementAcceptabilitiesAndEntropy = ({
 
             }
         }
-
         return currentJudgAcceptability;
     }
 
@@ -104,12 +104,12 @@ export const JudgementAcceptabilitiesAndEntropy = ({
                 }
             }
         }
-
         return potentialJudgAcceptability;
     }
 
     const initializeJudgementEntropy = () => {
         let judgEntropy: number[][][] = [];
+
 
         for (let crit = 0; crit < judgMultiInputs.length; crit++) {
             judgEntropy[crit] = [];

@@ -10,7 +10,6 @@ export const PotentialPreferenceEntropyDataGrid = ({
 // Flatten data to find global min and max
     const {min, max} = getMinAndMax(potPrefsEntropy.flat());
 
-
     function generatePrefCols() {
         // get number of preferences
         let maxNumPrefs = 0;

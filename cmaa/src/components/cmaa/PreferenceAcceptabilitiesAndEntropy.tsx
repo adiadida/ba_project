@@ -14,6 +14,7 @@ export const PreferenceAcceptabilitiesAndEntropy = ({
     const [potentialPrefAcceptability, setPotentialPrefAcceptability] = useState<number[][][]>([]);
     const [potentialPreferenceEntropy, setPotentialPreferenceEntropy] = useState<number[][]>([]);
 
+    // Ausblick: refactoring + prop management
     const initializePrefAcceptability = () => {
 
         let prefAcceptability: number[][][] = [];
@@ -268,5 +269,3 @@ type PreferenceProps = {
     prefsMultiInputs: number[][]; // prefsMultiInputs[criterion][preference]
 }
 
-// todo: useEffect with Unit Test
-// todo: vis with heatmap over prefs
