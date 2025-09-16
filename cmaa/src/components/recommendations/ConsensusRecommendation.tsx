@@ -16,7 +16,7 @@ export const ConsensusRecommendation = ({
 
         <Grid size={"auto"}>
             <Typography variant="body2" color="textSecondary" gutterBottom>
-                Die Auflösung dieser Konflikts führt in der Regel zu mehr Einstimmigkeit.
+                Die Auflösung dieser Konflikte führt in der Regel zu mehr Einstimmigkeit.
             </Typography>
         </Grid>
         <Grid container size={12} spacing={2}>

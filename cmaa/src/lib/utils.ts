@@ -92,3 +92,24 @@ export const getAcceptabilityColor = (value: number, minValue: number, maxValue:
 
     return `rgb(${r}, ${g}, ${b})`;
 };
+
+// heatmap adjacent visualization --> recommendations are colored according to their rank
+export function getRecommendationColor(value: number, minValue: number, maxValue: number): string {
+    // Handle edge cases where minValue == maxValue
+    const ratio = minValue === maxValue ? 0 : (value - minValue) / (maxValue - minValue);
+
+    const neutralHex = '#f5f5f5'; // Neutral color
+    const positiveHex = '#5ab4ac'; // green color for high values
+    // const positiveHex = '#01665e'
+
+    // Convert hex colors to RGB
+    const positiveColor = hexToRgb(positiveHex);
+    const neutralColor = hexToRgb(neutralHex);
+
+    // Interpolate between neutral and positive colors
+    const r = Math.round(neutralColor.r + (positiveColor.r - neutralColor.r) * ratio);
+    const g = Math.round(neutralColor.g + (positiveColor.g - neutralColor.g) * ratio);
+    const b = Math.round(neutralColor.b + (positiveColor.b - neutralColor.b) * ratio);
+
+    return `rgb(${r}, ${g}, ${b})`;
+}
