@@ -1420,6 +1420,7 @@ function computePreferenceEntropy(potPrefAcceptability: number[][][], preference
             preferenceEntropy[crit][prefIdx] = entropy;
         }
     }
+
     return preferenceEntropy;
 }
 
@@ -1578,6 +1579,7 @@ function getSensitivityAnalysis(rankAcceptabilityIndices: number[][], prefCircum
 
     const judgSensitivities = computeJudgSensitivity(rankOne, judgCircumstanceCounter, potentialJudgAcceptability);
 
+    //console.log('sensitivity ', prefSensitivities, judgSensitivities)
     return {prefSensitivities, judgSensitivities}
 }
 
@@ -1616,7 +1618,6 @@ function getConsensusRecommendation(prefEntropy: number[][], judgEntropy: number
     prefConsensusRecIdx: number[];
     judgConsensusRecIdx: number[][];
 } {
-
     const prefValues = prefEntropy.flat();
     const prefRec = getBestThreePlusBackupThree(prefValues);
 
@@ -1628,14 +1629,94 @@ function getConsensusRecommendation(prefEntropy: number[][], judgEntropy: number
 
     // rank of entropy in implicit  criterion, alternative
     const judgRecIdx: number[][] = getJudgRecIdxArray(judgRec, judgEntropy);
-
     return {prefConsensusRecIdx: prefRecIdx, judgConsensusRecIdx: judgRecIdx}
 }
+
+/*
+// crit 1
+[
+  [//alt 1
+    [
+      1.4215582698345441,
+      1.3991055386793874
+    ],
+    //alt 2
+    [
+      1.445606670340987
+    ],
+    //alt 3
+    [
+      1.5665256453301744,
+      1.4765536025909374,
+      0.8730625488520821
+    ]
+  ],
+  //crit 2
+  [
+  //alt 1
+    [
+      1.3936182841904174,
+      1.4273332746045981
+    ],
+    //alt 2
+    [
+      1.3216492408371272,
+      1.5094321484742612
+    ],
+    // alt 3
+    [
+      1.515546095595913,
+      1.377101077596345,
+      0.8688917638990756
+    ]
+  ],
+  //crit 3
+  [
+    [
+      1.1161667462431315,
+      1.4426752483834235,
+      1.3575279390737827
+    ],
+    [
+      1.2387705192910619,
+      1.37393127708801407,
+      1.5323713816369007
+    ],
+    [
+      1.501828705089297,
+      1.3692785221468198
+    ]
+  ]
+]*/
 
 function getBestThreePlusBackupThree(values: number[]): number[] {
     // sort shallow copy of values ascending
     const sorted = [...values].sort((n1, n2) => n1 - n2);
-    let bestThree: number[] = sorted.slice(0, 6);
+
+    let sliceEnd: number;
+    switch (sorted.length) {
+        case 1:
+            sliceEnd = 1;
+            break;
+        case 2:
+            sliceEnd = 2;
+            break;
+        case 3:
+            sliceEnd = 3;
+            break;
+        case 4:
+            sliceEnd = 4;
+            break;
+        case 5:
+            sliceEnd = 5;
+            break;
+        default:
+            sliceEnd = 6;
+            break;
+
+    }
+
+    let bestThree: number[] = sorted.slice(0, sliceEnd);
     return bestThree;
 }
 
@@ -1647,8 +1728,13 @@ function getPrefRecIdxArray(prefRec: number[], prefStatistics: number[][]): numb
     for (let recommendation = 0; recommendation < prefRec.length; recommendation++) {
         for (let criterion = 0; criterion < prefStatistics.length; criterion++) {
             for (let prefIdx = 0; prefIdx < prefStatistics[criterion].length; prefIdx++) {
+                // case: values are the same
                 if (prefRec[recommendation] === prefStatistics[criterion][prefIdx]) {
-                    prefRecIdx[criterion] = recommendation + 1;
+                    // case only if rank of recommendation isn't already filled
+                    if (prefRecIdx[criterion] === 0) {
+                        prefRecIdx[criterion] = recommendation + 1;
+                    }
+
                 }
             }
         }
@@ -1661,6 +1747,7 @@ function getPrefRecIdxArray(prefRec: number[], prefStatistics: number[][]): numb
         // Filter out non-zero values and sort them
         const nonZeroValues = prefRecIdx.filter(value => value !== 0);
         const sortedValues = nonZeroValues.sort((a, b) => a - b);
+
         // Get the three lowest values
         const lowestThree = sortedValues.slice(0, 3);
 
@@ -1685,8 +1772,14 @@ function getJudgRecIdxArray(judgRec: number[], judgStatistics: number[][][]): nu
         for (let criterion = 0; criterion < judgStatistics.length; criterion++) {
             for (let alternative = 0; alternative < judgStatistics[criterion].length; alternative++) {
                 for (let judgIdx = 0; judgIdx < judgStatistics[criterion].length; judgIdx++) {
+                    // case: same values
                     if (judgRec[recommendation] === judgStatistics[criterion][alternative][judgIdx]) {
-                        judgRecIdx[criterion][alternative] = recommendation + 1;
+
+                        // case: judgRecIdx not filled
+                        if (judgRecIdx[criterion][alternative] === 0) {
+                            judgRecIdx[criterion][alternative] = recommendation + 1;
+                        }
+
                     }
                 }
             }
