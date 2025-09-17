@@ -1275,7 +1275,11 @@ function getWinnerAndChance(rankAcceptabilityIndices: number[][]): {
     let winner: number = -1; // is alternative with highest chance of being rank one
     let chance: number = -1; // probability of winner alernative
 
-    const rankOne = rankAcceptabilityIndices[0]
+    let rankOne = [];
+    for (let i = 0; i < rankAcceptabilityIndices.length; i++) {
+        rankOne.push(rankAcceptabilityIndices[i][0])
+    }
+    //console.log(rankOne);
 
     for (let i = 0; i < rankOne.length; i++) {
         if (chance < rankOne[i]) {
@@ -1563,7 +1567,10 @@ function getSensitivityAnalysis(rankAcceptabilityIndices: number[][], prefCircum
     judgSensitivities: number[][][][]
 } {
 
-    const rankOne = rankAcceptabilityIndices[0];
+    let rankOne = [];
+    for (let i = 0; i < rankAcceptabilityIndices.length; i++) {
+        rankOne.push(rankAcceptabilityIndices[i][0])
+    }
 
     // Sensitivity = potential - rank 1 of winnerAlternative --> max
 
