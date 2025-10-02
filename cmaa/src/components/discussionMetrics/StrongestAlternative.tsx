@@ -1,9 +1,9 @@
 import {GenericCard} from "@/components/generics/GenericCard";
 import {Typography} from "@mui/material";
 
-export const Winner = ({alternativeWinner, chanceWinner}:WinnerProps) => {
+export const StrongestAlternative = ({alternativeWinner, chanceWinner}:WinnerProps) => {
   return (
-      <GenericCard title={'Sieger'} child={
+      <GenericCard title={'stärkste Alternative'} child={
           <Typography>Alternative {alternativeWinner} mit einer Chance von {chanceWinner}%</Typography>
       }/>
   )

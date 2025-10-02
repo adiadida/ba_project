@@ -1,7 +1,7 @@
 import Grid from "@mui/material/Grid";
 import {Consensus, ConsensusProps} from "@/components/discussionMetrics/Consensus";
 import {ConferenceStep, ConferenceStepProps} from "@/components/discussionMetrics/ConferenceStep";
-import {Winner, WinnerProps} from "@/components/discussionMetrics/Winner";
+import {StrongestAlternative, WinnerProps} from "@/components/discussionMetrics/StrongestAlternative";
 
 export const MetricsGrid = ({rankAcceptabilityIndices, conferenceCounter, alternativeWinner, chanceWinner} :ConsensusProps&ConferenceStepProps&WinnerProps) => {
     return (
@@ -15,7 +15,7 @@ export const MetricsGrid = ({rankAcceptabilityIndices, conferenceCounter, altern
             </Grid>
 
             <Grid size={{xs:12, sm:12, md:4, lg:4}}>
-                <Winner alternativeWinner={alternativeWinner} chanceWinner={chanceWinner}/>
+                <StrongestAlternative alternativeWinner={alternativeWinner} chanceWinner={chanceWinner}/>
             </Grid>
         </Grid>
     )
