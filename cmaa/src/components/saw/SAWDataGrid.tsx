@@ -14,10 +14,10 @@ export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps)
 
     // generate names of cols - cashed
     const generateColHeaders = useCallback(() => {
-        let colHeaders: string[] = ['criteria', 'criterion weight'];
+        let colHeaders: string[] = ['Kriterien', 'Priorisierung'];
 
         for (let i: number = 2; i < numCols; i++) {
-            colHeaders.push(`alternative ${i - 1}`);
+            colHeaders.push(`Alternative ${i - 1}`);
         }
         return colHeaders;
     }, [numCols]);
@@ -95,13 +95,13 @@ export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps)
 
     // generate names for rows - cashed
     const generateRowHeaders = useCallback(() => {
-        let rowHeaders: string[] = ['criteria'];
+        let rowHeaders: string[] = ['Kriterien'];
 
         for (let i: number = 1; i < numRows - 2; i++) {
-            rowHeaders.push(`criterion ${i}`);
+            rowHeaders.push(`Kriterium ${i}`);
         }
-        rowHeaders.push('weighted sum');
-        rowHeaders.push('rank');
+        rowHeaders.push('Summe');
+        rowHeaders.push('Rang');
 
         return rowHeaders;
     }, [numRows]);
@@ -154,7 +154,7 @@ export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps)
             dataRows.push({
                 id: r,
                 criteria: rowHeaders[r + 1],
-                weight: 2,
+                weight: undefined,
                 ...altProperties,
             });
         }
@@ -288,7 +288,7 @@ export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps)
                 ? {...newRows[sumRowIndex], ...sums}
                 : {
                     id: 1000,
-                    criteria: 'weighted sum',
+                    criteria: 'Summe',
                     weight: undefined,
                     ...sums,
                 };
@@ -305,7 +305,7 @@ export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps)
                 ? {...newRows[rankRowIndex], ...ranks}
                 : {
                     id: 1001,
-                    criteria: 'rank',
+                    criteria: 'Rang',
                     weight: undefined,
                     ...ranks,
                 };
@@ -375,7 +375,7 @@ export const SAWDataGrid = ({id, numCols, numRows, onDataChange}: DataGridProps)
         <Grid container spacing={2}>
             <Grid container direction={'row'} spacing={2} justifyContent={'space-between'} size={12}>
                 <Grid size={8}>
-                    <Typography variant={'h6'}>Decision Maker {id}</Typography>
+                    <Typography variant={'h6'}>Entscheidungsträger {id}</Typography>
                 </Grid>
 
                 <Grid size={4}>

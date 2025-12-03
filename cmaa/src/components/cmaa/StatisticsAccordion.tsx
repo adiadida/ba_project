@@ -27,7 +27,7 @@ export const StatisticsAccordion = ({
                         {/* Accordion for Rank Acceptability Indices */}
                         {rankAcceptabilityIndices && rankAcceptabilityIndices.length > 0 && (
 
-                            <GenericAccordion title={'Rank Acceptability Indices'} child={
+                            <GenericAccordion title={'Stärke der Alternative pro Rang'} child={
                                 <Grid container size={6}>
                                     <RankAcceptabilityIndices
                                         rankAccIdx={rankAcceptabilityIndices}
@@ -43,7 +43,7 @@ export const StatisticsAccordion = ({
                             preferencesCircumstanceCounterRef &&
                             preferencesCircumstanceCounterRef.length > 0 &&
                             preferencesMultiInputs.length > 0 && (
-                                <GenericAccordion title={'Preference Statistics'} child={
+                                <GenericAccordion title={'Priorisierungen'} child={
                                     <Grid container size={12}>
                                         <PreferenceStatistics
                                             rankAcceptabilityCounter={rankAcceptabilityCounter}
@@ -60,7 +60,7 @@ export const StatisticsAccordion = ({
                             judgementsCircumstanceCounterRef &&
                             judgementsCircumstanceCounterRef.length > 0 &&
                             judgementsMultiInputs.length > 0 && (
-                                <GenericAccordion title={'Judgement Statistics'} child={
+                                <GenericAccordion title={'Beurteilungen zum Erfüllungsgrad'} child={
                                     <Grid container size={12}>
                                         <JudgementStatistics
                                             rankAcceptabilityCounter={rankAcceptabilityCounter}

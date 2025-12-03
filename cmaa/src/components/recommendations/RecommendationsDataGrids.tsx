@@ -17,13 +17,13 @@ export const RecommendationsDataGrids = ({
         const cols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria',
+                headerName: 'Kriterien',
                 maxWidth: 150,
 
             },
             {
                 field: 'aggWeights',
-                headerName: 'preferences',
+                headerName: 'Priorisierungen',
                 minWidth: 200,
                 maxWidth: 300,
                 renderCell: (params: GridCellParams) => {
@@ -89,7 +89,7 @@ export const RecommendationsDataGrids = ({
 
             const prefRow: PrefRow = {
                 id: `crit${i + 1}`,
-                criteria: `criterion ${i + 1}`,
+                criteria: `Kriterium ${i + 1}`,
                 aggWeights: `${weights.join(' ,  ')}`,
 
             }
@@ -108,7 +108,7 @@ export const RecommendationsDataGrids = ({
         const judgeCols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria',
+                headerName: 'Kriterien',
                 maxWidth: 150,
             }
         ]
@@ -117,7 +117,7 @@ export const RecommendationsDataGrids = ({
 
             const judgeCol: GridColDef = {
                 field: `alt${alternative + 1}`,
-                headerName: `alternative ${alternative + 1}`,
+                headerName: `Alternative ${alternative + 1}`,
                 renderCell: (params: GridCellParams) => {
                     const value = params.value as string;
 
@@ -193,7 +193,7 @@ export const RecommendationsDataGrids = ({
 
             const judgeRow: JudgeRow = {
                 id: `crit${i + 1}`,
-                criteria: `criterion ${i + 1}`,
+                criteria: `K ${i + 1}`,
                 ...altProperties
             }
             for (let j = 0; j < aggJudgements[i].length; j++) { // iterate over cols

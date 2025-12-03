@@ -23,7 +23,7 @@ export const PotentialPreferenceEntropyDataGrid = ({
         const cols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria',
+                headerName: 'Kriterien/Priorisierungen',
                 maxWidth: 100,
             },
         ]
@@ -32,7 +32,7 @@ export const PotentialPreferenceEntropyDataGrid = ({
         for (let prefIndex = 0; prefIndex < maxNumPrefs; prefIndex++) {
             cols.push({
                 field: `pref${prefIndex + 1}`,
-                headerName: `Preference ${prefIndex + 1}`,
+                headerName: ``,
                 minWidth: 100,
                 maxWidth: 150,
                 renderCell: (params: GridCellParams) => {
@@ -120,7 +120,7 @@ export const PotentialPreferenceEntropyDataGrid = ({
 
             const prefRow: PrefRow = {
                 id: `crit${crit + 1}`,
-                criteria: `criterion ${crit + 1}`,
+                criteria: `Kriterium ${crit + 1}`,
                 ...prefProperties,
             }
             // define prefProperties
@@ -141,7 +141,7 @@ export const PotentialPreferenceEntropyDataGrid = ({
     const prefRows: PrefRow[] = generatePrefRows(prefsMultiInputs);
     return (<Grid>
         <Card style={{backgroundColor: blue[50]}}>
-            <CardHeader slotpropstitle={'body1'} title={'Potential Preference Entropy'}/>
+            <CardHeader title={'mögliche Konsensverbesserung bei den Priorisierungen'}/>
             <CardContent>
 
                 <Grid container spacing={2}>

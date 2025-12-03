@@ -47,7 +47,7 @@ export const ClarificationFooter = ({
                 <Button variant={"contained"} onClick={handleOpenUpdateSnackbar}>Eingaben übernehmen</Button>
             </Grid>
             <Grid size={"auto"}>
-                <Button onClick={handleOpenExitModal}>Diskussion beenden</Button>
+                <Button onClick={handleOpenExitModal}>Diskussion endgültig beenden</Button>
             </Grid>
 
             {/* Feedback */}

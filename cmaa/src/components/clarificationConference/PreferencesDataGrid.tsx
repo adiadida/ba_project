@@ -55,7 +55,7 @@ export const PreferencesDataGrid = ({preferenceMultiInputs, onPreferenceChange}:
         const cols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria/preferences',
+                headerName: 'Kriterien/Priorisierungen',
                 maxWidth: 100,
             },
         ]
@@ -116,7 +116,7 @@ export const PreferencesDataGrid = ({preferenceMultiInputs, onPreferenceChange}:
 
             const prefRow: PrefRow = {
                 id: `crit${crit + 1}`,
-                criteria: `criterion ${crit + 1}`,
+                criteria: `Kriterium ${crit + 1}`,
                 ...prefProperties,
             }
             // define prefProperties
@@ -139,7 +139,9 @@ export const PreferencesDataGrid = ({preferenceMultiInputs, onPreferenceChange}:
                   density={'compact'}
                   processRowUpdate={handleProcessRowUpdate}
                   autoPageSize={false}
-                  hideFooter={true}/>
+                  hideFooter={true}
+                  disableColumnSorting
+        />
     )
 }
 

@@ -41,7 +41,7 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
         const cols: GridColDef[] = [
             {
                 field: 'alternatives',
-                headerName: 'alternatives',
+                headerName: 'Alternativen',
                 minWidth: 100,
                 maxWidth: 150
             },
@@ -50,7 +50,7 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
         // Define other columns
         const otherCols: GridColDef[] = rankAccIdx[0].map((_, colIndex) => ({
             field: `rank${colIndex + 1}`,
-            headerName: `rank ${colIndex + 1}`,
+            headerName: `Rang ${colIndex + 1}`,
             minWidth: 100,
             maxWidth: 150,
             renderCell: (params: GridCellParams) => {
@@ -111,7 +111,7 @@ export const RankAcceptabilityIndices = ({rankAccIdx, rankAccCounter}: RankAccep
         for (let i = 0; i < rankAccIdx.length; i++) {
             const row: Row = {
                 id: `alt${i + 1}`,
-                alternatives: `alternative ${i + 1}`,
+                alternatives: `Alternative ${i + 1}`,
             };
 
             // Assign each alternative's value for this criterion

@@ -23,13 +23,13 @@ export const Recommendations = ({
 
             <Grid container spacing={2}>
                 <Grid>
-                    <GenericAccordion title={'konsensbasierte Konflikt-Empfehlung'}
+                    <GenericAccordion title={'Empfehlung zur Erhöhung der Meinungsübereinstimmung'}
                                       child={<ConsensusRecommendation aggPrefs={aggPrefs} aggJudgements={aggJudgements}
                                                                       prefRecIdx={prefConsensusRec}
                                                                       judgRecIdx={judgConsensusRec}/>}/>
                 </Grid>
                 <Grid>
-                    <GenericAccordion title={'Entwicklungspotential der Alternativen klären'}
+                    <GenericAccordion title={'Empfehlung zur Klärung des Entwicklungspotential einer Alternative'}
                                       child={<DevelopmentRecommendation aggPrefs={aggPrefs}
                                                                         aggJudgements={aggJudgements}
                                                                         prefDevelopmentRec={prefDevelopmentRec}

@@ -8,13 +8,13 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
         const cols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria',
+                headerName: 'Kriterium',
                 maxWidth: 150,
 
             },
             {
                 field: 'aggWeights',
-                headerName: 'preferences',
+                headerName: 'Priorisierungen',
                 minWidth: 200,
                 maxWidth: 300,
 
@@ -47,7 +47,7 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
 
             const prefRow: PrefRow = {
                 id: `crit${i + 1}`,
-                criteria: `criterion ${i + 1}`,
+                criteria: `Kriterium ${i + 1}`,
                 aggWeights: `${weights.join(' ,  ')}`
             }
 
@@ -65,7 +65,7 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
         const judgeCols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria',
+                headerName: 'Kriterien',
                 maxWidth: 150,
             }
         ]
@@ -74,7 +74,7 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
 
             const judgeCol: GridColDef = {
                 field: `alt${i + 1}`,
-                headerName: `alternative ${i + 1}`,
+                headerName: `Alternative ${i + 1}`,
             }
 
             //console.log('judge col: ', judgeCol);
@@ -117,7 +117,7 @@ export const AggregatedInputs = ({aggPrefs, aggJudgements}: AggregatedInputsProp
 
             const judgeRow: JudgeRow = {
                 id: `crit${i + 1}`,
-                criteria: `criterion ${i + 1}`,
+                criteria: `Kriterium ${i + 1}`,
                 ...altProperties
             }
             for (let j = 0; j < aggJudgements[i].length; j++) { // iterate over cols

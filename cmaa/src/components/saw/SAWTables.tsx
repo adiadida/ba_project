@@ -98,14 +98,14 @@ export const SAWTables = ({numCols, numRows, numDM}: SAWTablesProps) => {
             <Grid container direction={'row'} spacing={2} alignItems={'center'} justifyContent={'center'}
                   size={12}>
                 <Grid size={3}>
-                    <GenericLikertCard title={'Priorisierung des Kriteriums'} one={'ganz und gar nicht wichtig'}
+                    <GenericLikertCard title={'Priorisierung des Kriteriums'} one={'gar nicht wichtig'}
                                        two={'nicht wichtig'} three={'neutral'} four={'wichtig'}
-                                       five={'voll und ganz wichtig'}/>
+                                       five={'ganz wichtig'}/>
                 </Grid>
                 <Grid size={3}>
-                    <GenericLikertCard title={'Erfüllung des Kriteriums'} one={'ganz und gar nicht erfüllt'}
+                    <GenericLikertCard title={'Beurteilung der Erfüllung des Kriteriums'} one={'gar nicht erfüllt'}
                                        two={'nicht erfüllt'} three={'neutral'} four={'erfüllt'}
-                                       five={'voll und ganz erfüllt'}/>
+                                       five={'ganz erfüllt'}/>
                 </Grid>
             </Grid>
 
@@ -114,8 +114,9 @@ export const SAWTables = ({numCols, numRows, numDM}: SAWTablesProps) => {
             <Grid container direction={'row'} spacing={2} alignItems={'center'} justifyContent={'flex-end'}
                   size={12}>
                 <Grid size={2}>
-                    <Button variant={'contained'} disabled={areEmpty} onClick={handleButtonClick}>Diskussion
-                        starten</Button>
+                    <Button variant={'contained'} disabled={areEmpty} onClick={handleButtonClick}>Entscheidungsprozess
+                        beginnen
+                    </Button>
                 </Grid>
             </Grid>
 

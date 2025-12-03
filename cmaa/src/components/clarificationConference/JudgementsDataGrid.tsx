@@ -92,7 +92,7 @@ export const JudgementsDataGrid = ({judgementMultiInputs, onJudgementChange}: Ju
         const judgeCols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria/alternatives',
+                headerName: 'Kriterien/Beurteilungen',
                 maxWidth: 70,
             }
         ]
@@ -111,7 +111,7 @@ export const JudgementsDataGrid = ({judgementMultiInputs, onJudgementChange}: Ju
 
             const judgeCol: GridColDef = {
                 field: fieldName,
-                headerName: fieldName.includes('judg1') ? `a ${altNum}` : '', // only gets a name if it contains judg1, e.g. 'alt1judg1'
+                headerName: fieldName.includes('judg1') ? `A ${altNum}` : '', // only gets a name if it contains judg1, e.g. 'alt1judg1'
                 minWidth: 30,
                 maxWidth: 45,
                 headerAlign: "center",
@@ -153,7 +153,7 @@ export const JudgementsDataGrid = ({judgementMultiInputs, onJudgementChange}: Ju
 
             const judgeRow: JudgeRow = {
                 id: `crit${crit + 1}`,
-                criteria: `c ${crit + 1}`,
+                criteria: `K ${crit + 1}`,
                 ...altJudgProperties
             }
             for (let alt = 0; alt < judgArray[crit].length; alt++) { // iterate over cols
@@ -180,7 +180,9 @@ export const JudgementsDataGrid = ({judgementMultiInputs, onJudgementChange}: Ju
                   density={'compact'}
                   processRowUpdate={handleProcessRowUpdate}
                   autoPageSize={false}
-                  hideFooter={true}/>
+                  hideFooter={true}
+                  disableColumnSorting
+        />
     )
 }
 

@@ -57,7 +57,7 @@ export const PotentialJudgementEntropyDataGrid = ({judgementMultiInputs,potJudgE
         const judgeCols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria',
+                headerName: 'Kriterien/Beurteilungen',
                 maxWidth: 70,
             }
         ]
@@ -75,7 +75,7 @@ export const PotentialJudgementEntropyDataGrid = ({judgementMultiInputs,potJudgE
 
             const judgeCol: GridColDef = {
                 field: fieldName,
-                headerName: fieldName.includes('judg1') ? `a ${altNum}` : '', // only gets a name if it contains judg1, e.g. 'alt1judg1'
+                headerName: fieldName.includes('judg1') ? `A ${altNum}` : '', // only gets a name if it contains judg1, e.g. 'alt1judg1'
                 minWidth: 50,
                 maxWidth: 70,
                 headerAlign: "center",
@@ -155,7 +155,7 @@ export const PotentialJudgementEntropyDataGrid = ({judgementMultiInputs,potJudgE
 
             const judgeRow: JudgeRow = {
                 id: `crit${crit + 1}`,
-                criteria: `c ${crit + 1}`,
+                criteria: `K ${crit + 1}`,
                 ...altJudgProperties
             }
             for (let alt = 0; alt < judgArray[crit].length; alt++) { // iterate over cols
@@ -184,7 +184,7 @@ export const PotentialJudgementEntropyDataGrid = ({judgementMultiInputs,potJudgE
   return(
       <Grid>
             <Card style={{backgroundColor: blue[50]}}>
-                <CardHeader slotpropstitle={'body1'} title={'Potential Judgement Entropy'}/>
+                <CardHeader title={'mögliche Konsensverbesserung bei den Beurteilungen'}/>
                 <CardContent>
                     <Grid container spacing={2}>
                         <Grid size={12}>

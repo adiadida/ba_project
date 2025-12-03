@@ -26,7 +26,7 @@ export const SAWInputs = ({inputs, onDataAction}: SWAInputCardProps) => {
                           inputs={inputs}
                           onChange={(updated) => handleInputChange('criteria', String(updated.criteria))}
             />
-            <GenericInput typoText={'Erfüllungsgrad der Kriterien'} fieldName={''}
+            <GenericInput typoText={'Beurteilung Erfüllungsgrad der Kriterien'} fieldName={''}
                           fieldLabelText={'in Zahlen 1..5'} isRequired={false} isDisabled={true}
             />
             <GenericInput typoText={'Priorisierung der Kriterien'} fieldName={''} fieldLabelText={'in Zahlen 1..5'}

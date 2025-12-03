@@ -62,7 +62,7 @@ export const JudgementAcceptabilityDataGrid = ({
         const judgeCols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria',
+                headerName: 'Kriterien/Beurteilungen',
                 maxWidth: 70,
             }
         ]
@@ -81,7 +81,7 @@ export const JudgementAcceptabilityDataGrid = ({
 
             const judgeCol: GridColDef = {
                 field: fieldName,
-                headerName: fieldName.includes('judg1') ? `a ${altNum}` : '', // only gets a name if it contains judg1, e.g. 'alt1judg1'
+                headerName: fieldName.includes('judg1') ? `A ${altNum}` : '', // only gets a name if it contains judg1, e.g. 'alt1judg1'
                 minWidth: 50,
                 maxWidth: 70,
                 headerAlign: "center",
@@ -160,7 +160,7 @@ export const JudgementAcceptabilityDataGrid = ({
 
             const judgeRow: JudgeRow = {
                 id: `crit${crit + 1}`,
-                criteria: `c ${crit + 1}`,
+                criteria: `K ${crit + 1}`,
                 ...altJudgProperties
             }
             for (let alt = 0; alt < judgArray[crit].length; alt++) { // iterate over cols
@@ -187,17 +187,17 @@ export const JudgementAcceptabilityDataGrid = ({
 
     const headerText = () => {
         if (isCurrent) {
-            return 'Current Judgement Acceptability';
+            return 'aktueller Einfluss auf die Stärke der Alternative';//'Current Judgement Acceptability';
         } else {
-            return 'Potential Judgement Acceptability';
+            return 'möglicher Einfluss  auf die Stärke der Alternative';//'Potential Judgement Acceptability';
         }
     }
 
     return (
         <Grid>
             <Card>
-                <CardHeader slotpropstitle={'body1'} title={headerText()}
-                            subheader={`alternative winner ${altWinner}`}/>
+                <CardHeader title={headerText()}
+                            subheader={`wenn Alternative ${altWinner} die stärkste Alternative ist`}/>
                 <CardContent>
                     <Grid container spacing={2}>
                         <Grid size={12}>

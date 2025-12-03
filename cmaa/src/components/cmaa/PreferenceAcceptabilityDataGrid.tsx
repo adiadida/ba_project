@@ -25,7 +25,7 @@ export const PreferenceAcceptabilityDataGrid = ({
         const cols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'criteria',
+                headerName: 'Kriterien/Priorisierungen',
                 maxWidth: 100,
             },
         ]
@@ -34,7 +34,7 @@ export const PreferenceAcceptabilityDataGrid = ({
         for (let prefIndex = 0; prefIndex < maxNumPrefs; prefIndex++) {
             cols.push({
                 field: `pref${prefIndex + 1}`,
-                headerName: `Preference ${prefIndex + 1}`,
+                headerName: ``,
                 minWidth: 100,
                 maxWidth: 150,
                 renderCell: (params: GridCellParams) => {
@@ -50,7 +50,7 @@ export const PreferenceAcceptabilityDataGrid = ({
                         const critProperty = params.row.criteria;
                         //console.log(critProperty); // example 'criterion 3'
                         //console.log(parseInt(critProperty, 10)) //  why is this NaN?
-                        const match = critProperty.match(/\d+/); // regex to extract number from string criterion n
+                        const match = critProperty.match(/\d+/); // regex to extract number from string Kriterium n
                         const critIdx = match ? parseInt(match[0], 10) - 1 : null; // convert string to integer index
 
                         if (critIdx !== null && preferenceAcceptability[critIdx]) {
@@ -121,7 +121,7 @@ export const PreferenceAcceptabilityDataGrid = ({
 
             const prefRow: PrefRow = {
                 id: `crit${crit + 1}`,
-                criteria: `criterion ${crit + 1}`,
+                criteria: `Kriterium ${crit + 1}`,
                 ...prefProperties,
             }
             // define prefProperties
@@ -143,16 +143,18 @@ export const PreferenceAcceptabilityDataGrid = ({
 
     const headerText = () => {
         if (isCurrent) {
-            return 'Current Preference Acceptability';
+            return 'aktueller Einfluss auf die Stärke der Alternative';
+            //Current Preference Acceptability
         } else {
-            return 'Potential Preference Acceptability';
+            return 'möglicher Einfluss auf die Stärke der Alternative';
+            // Potential Preference Acceptability
         }
     }
 
     return (
         <Grid>
             <Card>
-                <CardHeader slotpropstitle={'body1'} title={headerText()} subheader={`alternative winner ${altWinner}`}/>
+                <CardHeader title={headerText()} subheader={`wenn Alternative ${altWinner} die stärkste Alternative ist`}/>
                 <CardContent>
                     <Grid container spacing={2}>
                         <Grid size={6}>
