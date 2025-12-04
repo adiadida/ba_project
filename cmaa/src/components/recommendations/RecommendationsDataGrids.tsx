@@ -108,7 +108,7 @@ export const RecommendationsDataGrids = ({
         const judgeCols: GridColDef[] = [
             {
                 field: 'criteria',
-                headerName: 'Kriterien',
+                headerName: 'Kriterien/Beurteilungen',
                 maxWidth: 150,
             }
         ]
