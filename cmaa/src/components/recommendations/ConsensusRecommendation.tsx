@@ -5,6 +5,7 @@ import {
 import Grid from "@mui/material/Grid";
 import {Typography} from "@mui/material";
 import * as React from "react";
+import {deepClone} from "@mui/x-data-grid/internals";
 
 export const ConsensusRecommendation = ({
                                             aggPrefs,
@@ -12,6 +13,15 @@ export const ConsensusRecommendation = ({
                                             prefRecIdx,
                                             judgRecIdx
                                         }: RecommendationsDataGridsProps) => {
+    // get all ranks for correct visualization in Data Grids
+    const getRecRanks = (prefRecIdx: number[], judgRecIdx: number[][]) => {
+      const judgRanks = judgRecIdx.flat();
+      const allRanks = deepClone(judgRanks.concat(prefRecIdx));
+      return allRanks;
+    }
+
+    const allRanks=getRecRanks(prefRecIdx, judgRecIdx);
+
     return (<Grid container spacing={2} alignItems="center">
 
         <Grid size={"auto"}>
@@ -23,7 +33,9 @@ export const ConsensusRecommendation = ({
             <RecommendationsDataGrids aggPrefs={aggPrefs}
                                       aggJudgements={aggJudgements}
                                       prefRecIdx={prefRecIdx}
-                                      judgRecIdx={judgRecIdx}/>
+                                      judgRecIdx={judgRecIdx}
+                                      allRanks={allRanks}
+            />
         </Grid>
     </Grid>)
 }
@@ -33,4 +45,3 @@ export type ConsensusRecommendationProps = {
     judgConsensusRec: number[][];
 
 }
-

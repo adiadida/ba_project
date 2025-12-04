@@ -10,7 +10,8 @@ export const RecommendationsDataGrids = ({
                                              aggPrefs,
                                              aggJudgements,
                                              prefRecIdx,
-                                             judgRecIdx
+                                             judgRecIdx,
+                                             allRanks,
                                          }: RecommendationsDataGridsProps) => {
 
     function generatePrefCols() {
@@ -38,7 +39,14 @@ export const RecommendationsDataGrids = ({
                     const critIdx = match ? parseInt(match[0], 10) - 1 : null; // convert string to integer index
 
                     if (critIdx !== null && prefRecIdx[critIdx]) {
-                        const {min, max} = getMinAndMax(prefRecIdx);
+
+                        let min, max;
+                        if (allRanks !== undefined) {
+                            ({min, max} = getMinAndMax(allRanks));
+                        } else {
+                            ({min, max} = getMinAndMax(prefRecIdx));
+                        }
+
                         const val = prefRecIdx[critIdx];
                         backgroundColor = getRecommendationColor(val, min, max);
                     }
@@ -130,7 +138,14 @@ export const RecommendationsDataGrids = ({
                     const critIdx = matchCrit ? parseInt(matchCrit[0], 10) - 1 : null; // convert string to integer index
 
                     if (critIdx !== null && judgRecIdx[critIdx][alternative]) {
-                        const {min, max} = getMinAndMax(judgRecIdx.flat())
+
+                        let min, max;
+                        if (allRanks !== undefined) {
+                            ({min, max} = getMinAndMax(allRanks));
+                        } else {
+                            ({min, max} = getMinAndMax(judgRecIdx.flat()));
+                        }
+
                         const val = judgRecIdx[critIdx][alternative];
                         //console.log('val', val)
                         backgroundColor = getRecommendationColor(val, min, max);
@@ -243,4 +258,5 @@ export const RecommendationsDataGrids = ({
 export type RecommendationsDataGridsProps = AggregatedInputsProps & {
     prefRecIdx: number[];
     judgRecIdx: number[][];
+    allRanks?: number[];
 };

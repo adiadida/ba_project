@@ -1619,77 +1619,32 @@ function getConsensusRecommendation(prefEntropy: number[][], judgEntropy: number
     judgConsensusRecIdx: number[][];
 } {
     const prefValues = prefEntropy.flat();
-    const prefRec = getBestThreePlusBackupThree(prefValues);
+    // const prefRec = getBestThreePlusBackups(prefValues);
+    //
+    // // rank of entropy  in implicit criterion
+    // const prefRecIdx: number[] = getPrefRecIdxArray(prefRec, prefEntropy);
+    //
+    const judgValues = judgEntropy.flat().flat();
+    // const judgRec = getBestThreePlusBackups(judgValues);
+    //
+    // // rank of entropy in implicit  criterion, alternative
+    // const judgRecIdx: number[][] = getJudgRecIdxArray(judgRec, judgEntropy);
+
+    const allValues = structuredClone(prefValues.concat(judgValues));
+    // get lowest entropies
+    const recommendations = getBestThreePlusBackups(allValues);
 
     // rank of entropy  in implicit criterion
-    const prefRecIdx: number[] = getPrefRecIdxArray(prefRec, prefEntropy);
-
-    const judgValues = judgEntropy.flat().flat();
-    const judgRec = getBestThreePlusBackupThree(judgValues);
-
+    const prefRecIdx: number[] = getPrefRecIdxArray(recommendations, prefEntropy);
     // rank of entropy in implicit  criterion, alternative
-    const judgRecIdx: number[][] = getJudgRecIdxArray(judgRec, judgEntropy);
+    const judgRecIdx: number[][] = getJudgRecIdxArray(recommendations, judgEntropy);
+    //console.log(prefRecIdx);
+    //console.log(judgRecIdx);
     return {prefConsensusRecIdx: prefRecIdx, judgConsensusRecIdx: judgRecIdx}
 }
 
-/*
-// crit 1
-[
-  [//alt 1
-    [
-      1.4215582698345441,
-      1.3991055386793874
-    ],
-    //alt 2
-    [
-      1.445606670340987
-    ],
-    //alt 3
-    [
-      1.5665256453301744,
-      1.4765536025909374,
-      0.8730625488520821
-    ]
-  ],
-  //crit 2
-  [
-  //alt 1
-    [
-      1.3936182841904174,
-      1.4273332746045981
-    ],
-    //alt 2
-    [
-      1.3216492408371272,
-      1.5094321484742612
-    ],
-    // alt 3
-    [
-      1.515546095595913,
-      1.377101077596345,
-      0.8688917638990756
-    ]
-  ],
-  //crit 3
-  [
-    [
-      1.1161667462431315,
-      1.4426752483834235,
-      1.3575279390737827
-    ],
-    [
-      1.2387705192910619,
-      1.37393127708801407,
-      1.5323713816369007
-    ],
-    [
-      1.501828705089297,
-      1.3692785221468198
-    ]
-  ]
-]*/
 
-function getBestThreePlusBackupThree(values: number[]): number[] {
+function getBestThreePlusBackups(values: number[]): number[] {
     // sort shallow copy of values ascending
     const sorted = [...values].sort((n1, n2) => n1 - n2);
 
@@ -1710,8 +1665,14 @@ function getBestThreePlusBackupThree(values: number[]): number[] {
         case 5:
             sliceEnd = 5;
             break;
-        default:
+        case 6:
             sliceEnd = 6;
+            break;
+        case 7:
+            sliceEnd = 7;
+            break;
+        default:
+            sliceEnd = 8;
             break;
 
     }
